@@ -1,4 +1,5 @@
 import { CROPS, costEntries, type Cost, type CropId } from '@/domain/crops';
+import { useT } from '@/i18n/context';
 import { formatCount } from '../format';
 
 const PATHS: Readonly<Record<CropId, JSX.Element>> = {
@@ -56,8 +57,9 @@ export function CropChip({ crop, amount, short = false }: { crop: CropId; amount
 }
 
 export function CostChips({ cost, have }: { cost: Cost; have?: Readonly<Record<CropId, number>> }) {
+  const { t } = useT();
   const entries = costEntries(cost);
-  if (!entries.length) return <span className="chip">Free</span>;
+  if (!entries.length) return <span className="chip">{t('app.free')}</span>;
   return (
     <>
       {entries.map(([id, n]) => (

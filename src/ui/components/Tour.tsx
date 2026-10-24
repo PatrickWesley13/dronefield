@@ -1,62 +1,26 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useT } from '@/i18n/context';
+import type { MessageKey } from '@/i18n/en';
 import type { SideTab } from './side/SidePanel';
 
 interface TourStep {
   readonly target?: string;
   readonly tab?: SideTab;
-  readonly title: string;
-  readonly text: string;
+  readonly titleKey: MessageKey;
+  readonly textKey: MessageKey;
 }
 
 const STEPS: readonly TourStep[] = [
-  {
-    title: 'Welcome, operator',
-    text: 'Dronefield’s harvest drone does nothing on its own. You write the program, it does the farming. This quick tour shows you around.',
-  },
-  {
-    target: '.stage',
-    title: 'The field',
-    text: 'This is where your drone works. x counts columns from the west, y counts rows from the south, so the bottom-left tile is x 0, y 0. North is up.',
-  },
-  {
-    target: '.editor',
-    title: 'Your program',
-    text: 'Write JavaScript here. Each mission comes with starter code you can change. Suggestions appear as you type.',
-  },
-  {
-    target: '.toolbar .btn--primary',
-    title: 'Run it',
-    text: 'Run executes your program in the field. Step runs one line at a time so you can watch exactly what happens. Ctrl+Enter also runs.',
-  },
-  {
-    target: '#speed-control',
-    title: 'Speed',
-    text: 'Slow it down to follow along, or set Instant for long programs. Speed only changes the animation, never the result.',
-  },
-  {
-    target: '#console',
-    title: 'The console',
-    text: 'console.log() writes here. When something goes wrong, the error names the line it happened on. Click the line number to jump to it.',
-  },
-  {
-    target: '.side',
-    tab: 'mission',
-    title: 'Your mission',
-    text: 'Each mission teaches one idea. Objectives tick off as you meet them, and the mission ends as soon as they’re all done.',
-  },
-  {
-    target: '#tab-reference',
-    tab: 'reference',
-    title: 'Reference',
-    text: 'Every function you’ve unlocked, with examples. New functions unlock as you progress.',
-  },
-  {
-    target: '#tab-upgrades',
-    tab: 'upgrades',
-    title: 'Upgrades',
-    text: 'After the third mission you get your own farm. Its harvests buy upgrades: faster rotors, more space, new seeds and new functions.',
-  },
-  { title: 'Ready for take-off', text: 'Start with First Flight. Change the code so the drone reaches the beacon, then press Run.' },
+  { titleKey: 'tour.welcome.title', textKey: 'tour.welcome.text' },
+  { target: '.stage', titleKey: 'tour.field.title', textKey: 'tour.field.text' },
+  { target: '.editor', titleKey: 'tour.program.title', textKey: 'tour.program.text' },
+  { target: '.toolbar .btn--primary', titleKey: 'tour.run.title', textKey: 'tour.run.text' },
+  { target: '#speed-control', titleKey: 'tour.speed.title', textKey: 'tour.speed.text' },
+  { target: '#console', titleKey: 'tour.console.title', textKey: 'tour.console.text' },
+  { target: '.side', tab: 'mission', titleKey: 'tour.mission.title', textKey: 'tour.mission.text' },
+  { target: '#tab-reference', tab: 'reference', titleKey: 'tour.reference.title', textKey: 'tour.reference.text' },
+  { target: '#tab-upgrades', tab: 'upgrades', titleKey: 'tour.upgrades.title', textKey: 'tour.upgrades.text' },
+  { titleKey: 'tour.ready.title', textKey: 'tour.ready.text' },
 ];
 
 interface Placement {
@@ -65,6 +29,7 @@ interface Placement {
 }
 
 export function Tour({ onTab, onClose }: { onTab: (tab: SideTab) => void; onClose: () => void }) {
+  const { t } = useT();
   const [index, setIndex] = useState(0);
   const [placement, setPlacement] = useState<Placement | null>(null);
   const card = useRef<HTMLDivElement>(null);
@@ -127,22 +92,20 @@ export function Tour({ onTab, onClose }: { onTab: (tab: SideTab) => void; onClos
     <div className="tour" onKeyDown={onKey}>
       <div className="tour__spot" style={placement?.spot} />
       <div className="tour__card" ref={card} style={placement?.card} role="dialog" aria-modal="true" aria-labelledby="tour-title">
-        <h3 id="tour-title">{step.title}</h3>
-        <p>{step.text}</p>
+        <h3 id="tour-title">{t(step.titleKey)}</h3>
+        <p>{t(step.textKey)}</p>
         <div className="tour__actions">
-          <span className="tour__count">
-            {index + 1} of {STEPS.length}
-          </span>
+          <span className="tour__count">{t('tour.count', { index: index + 1, total: STEPS.length })}</span>
           <button className="btn" onClick={onClose}>
-            Skip tour
+            {t('app.skipTour')}
           </button>
           {index > 0 && (
             <button className="btn" onClick={() => setIndex(index - 1)}>
-              Back
+              {t('app.back')}
             </button>
           )}
           <button className="btn btn--primary" ref={next} onClick={advance}>
-            {last ? 'Start playing' : 'Next'}
+            {last ? t('tour.start') : t('app.next')}
           </button>
         </div>
       </div>

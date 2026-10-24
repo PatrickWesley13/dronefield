@@ -1,6 +1,8 @@
 import { useEffect, useRef } from 'react';
 import { MISSIONS } from '@/missions';
 import type { MotionPreference, ThemePreference } from '@/persistence';
+import { useT } from '@/i18n/context';
+import { LOCALES, LOCALE_NAMES, type Locale } from '@/i18n/locales';
 import { formatCount } from '../../format';
 import { useController, useGame } from '../../GameContext';
 import { useConfirm } from './ConfirmProvider';
@@ -9,6 +11,7 @@ export function SettingsDialog({ open, onClose, onReplayTour }: { open: boolean;
   const game = useGame();
   const controller = useController();
   const confirm = useConfirm();
+  const { t } = useT();
   const dialog = useRef<HTMLDialogElement>(null);
   const { settings, lifetime, completed } = game.save;
 
@@ -22,30 +25,44 @@ export function SettingsDialog({ open, onClose, onReplayTour }: { open: boolean;
   const wipe = async () => {
     onClose();
     const ok = await confirm({
-      title: 'Reset all progress?',
-      body: 'Missions, code, crops, upgrades and your farm will be erased from this browser. Settings are kept. This can’t be undone.',
-      confirmLabel: 'Erase everything',
+      title: t('settings.resetTitle'),
+      body: t('settings.resetBody'),
+      confirmLabel: t('settings.resetConfirm'),
     });
     if (ok) controller.resetProgress();
   };
 
   return (
     <dialog ref={dialog} onClose={onClose} aria-labelledby="settings-title">
-      <h2 id="settings-title">Settings</h2>
+      <h2 id="settings-title">{t('settings.title')}</h2>
       <label className="field">
-        Sound effects
-        <input type="checkbox" checked={settings.sound} onChange={(e) => controller.updateSettings({ sound: e.target.checked })} />
-      </label>
-      <label className="field">
-        Animations
-        <select value={settings.motion} onChange={(e) => controller.updateSettings({ motion: e.target.value as MotionPreference })}>
-          <option value="auto">Follow system</option>
-          <option value="full">Full</option>
-          <option value="reduced">Reduced</option>
+        {t('settings.language')}
+        <select
+          value={settings.language ?? ''}
+          onChange={(e) => controller.updateSettings({ language: e.target.value === '' ? null : (e.target.value as Locale) })}
+        >
+          <option value="">{t('settings.languageAuto')}</option>
+          {LOCALES.map((locale) => (
+            <option key={locale} value={locale}>
+              {LOCALE_NAMES[locale]}
+            </option>
+          ))}
         </select>
       </label>
       <label className="field">
-        Show grid coordinates
+        {t('settings.sound')}
+        <input type="checkbox" checked={settings.sound} onChange={(e) => controller.updateSettings({ sound: e.target.checked })} />
+      </label>
+      <label className="field">
+        {t('settings.animations')}
+        <select value={settings.motion} onChange={(e) => controller.updateSettings({ motion: e.target.value as MotionPreference })}>
+          <option value="auto">{t('settings.animations.auto')}</option>
+          <option value="full">{t('settings.animations.full')}</option>
+          <option value="reduced">{t('settings.animations.reduced')}</option>
+        </select>
+      </label>
+      <label className="field">
+        {t('settings.coords')}
         <input
           type="checkbox"
           checked={settings.showCoordinates}
@@ -53,31 +70,29 @@ export function SettingsDialog({ open, onClose, onReplayTour }: { open: boolean;
         />
       </label>
       <label className="field">
-        Theme
+        {t('settings.theme')}
         <select value={settings.theme} onChange={(e) => controller.updateSettings({ theme: e.target.value as ThemePreference })}>
-          <option value="system">Follow system</option>
-          <option value="light">Light</option>
-          <option value="dark">Dark</option>
+          <option value="system">{t('settings.theme.system')}</option>
+          <option value="light">{t('settings.theme.light')}</option>
+          <option value="dark">{t('settings.theme.dark')}</option>
         </select>
       </label>
-      <h3>Lifetime</h3>
+      <h3>{t('settings.lifetime')}</h3>
       <dl className="stats-list">
-        <dt>Runs</dt>
+        <dt>{t('settings.runs')}</dt>
         <dd>{formatCount(lifetime.runs)}</dd>
-        <dt>Crops harvested</dt>
+        <dt>{t('settings.harvests')}</dt>
         <dd>{formatCount(lifetime.harvests)}</dd>
-        <dt>Drone actions</dt>
+        <dt>{t('settings.actionsCount')}</dt>
         <dd>{formatCount(lifetime.actions)}</dd>
-        <dt>Instructions</dt>
+        <dt>{t('settings.instructionsCount')}</dt>
         <dd>{formatCount(lifetime.instructions)}</dd>
-        <dt>Missions</dt>
-        <dd>
-          {Object.keys(completed).length} of {MISSIONS.length}
-        </dd>
+        <dt>{t('settings.missions')}</dt>
+        <dd>{t('settings.missionsDone', { done: Object.keys(completed).length, total: MISSIONS.length })}</dd>
       </dl>
       <div className="dialog__actions dialog__actions--split">
         <button className="btn btn--danger" onClick={wipe}>
-          Reset all progress
+          {t('settings.reset')}
         </button>
         <span>
           <button
@@ -87,10 +102,10 @@ export function SettingsDialog({ open, onClose, onReplayTour }: { open: boolean;
               onReplayTour();
             }}
           >
-            Replay tour
+            {t('settings.replayTour')}
           </button>{' '}
           <button className="btn btn--primary" onClick={onClose}>
-            Done
+            {t('app.done')}
           </button>
         </span>
       </div>

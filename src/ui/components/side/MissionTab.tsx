@@ -1,10 +1,19 @@
 import { CROPS, costEntries } from '@/domain/crops';
 import { sandboxLoadout } from '@/progression';
+import { useT } from '@/i18n/context';
+import type { MessageKey } from '@/i18n/en';
 import { formatCount } from '../../format';
 import { useGame } from '../../GameContext';
 import { CostChips, CropIcon } from '../CropIcon';
 
+const METRIC_KEYS = {
+  ticks: 'mission.metric.ticks',
+  actions: 'mission.metric.actions',
+  instructions: 'mission.metric.instructions',
+} as const satisfies Record<string, MessageKey>;
+
 export function MissionTab({ onShowReference }: { onShowReference: () => void }) {
+  const { t } = useT();
   const game = useGame();
   const { level, save, missionStatus, lastRun } = game;
 
@@ -12,29 +21,22 @@ export function MissionTab({ onShowReference }: { onShowReference: () => void })
     const l = sandboxLoadout(save);
     return (
       <>
-        <h2>Open farm</h2>
-        <p className="concept">Sandbox</p>
-        <p>
-          Your own field, with every function and seed you’ve unlocked. Crops you harvest here go straight into your stores, and the field
-          stays as you left it between visits.
-        </p>
-        <p>Spend crops on upgrades to farm faster. A program that loops forever is fine here: press Stop whenever you like.</p>
-        <h3>Your drone</h3>
+        <h2>{t('mission.openFarm')}</h2>
+        <p className="concept">{t('mission.sandboxTag')}</p>
+        <p>{t('mission.sandboxBody')}</p>
+        <p>{t('mission.sandboxSpend')}</p>
+        <h3>{t('mission.yourDrone')}</h3>
         <dl className="stats-list">
-          <dt>Field</dt>
-          <dd>
-            {l.size} × {l.size} tiles
-          </dd>
-          <dt>Cargo</dt>
-          <dd>{l.capacity} of each crop</dd>
-          <dt>Move cost</dt>
-          <dd>
-            {l.moveCost} tick{l.moveCost > 1 ? 's' : ''}
-          </dd>
-          <dt>Harvest bonus</dt>
-          <dd>{l.yieldBonus ? `+${l.yieldBonus} per harvest` : 'none'}</dd>
+          <dt>{t('mission.field')}</dt>
+          <dd>{t('mission.fieldSize', { size: l.size })}</dd>
+          <dt>{t('mission.cargo')}</dt>
+          <dd>{t('mission.cargoEach', { capacity: l.capacity })}</dd>
+          <dt>{t('mission.moveCost')}</dt>
+          <dd>{t('mission.ticks', { count: l.moveCost })}</dd>
+          <dt>{t('mission.harvestBonus')}</dt>
+          <dd>{l.yieldBonus ? t('mission.harvestBonusValue', { bonus: l.yieldBonus }) : t('mission.none')}</dd>
         </dl>
-        <h3>Seeds</h3>
+        <h3>{t('mission.seeds')}</h3>
         <div className="chip-row">
           {save.unlockedCrops.map((c) => (
             <span key={c} className="chip">
@@ -54,17 +56,17 @@ export function MissionTab({ onShowReference }: { onShowReference: () => void })
     <>
       <h2>{m.title}</h2>
       <p className="concept">{m.concept}</p>
-      {m.briefing.map((t) => (
-        <p key={t}>{t}</p>
+      {m.briefing.map((text) => (
+        <p key={text}>{text}</p>
       ))}
-      <h3>Objectives</h3>
+      <h3>{t('mission.objectives')}</h3>
       <ul className="objectives">
         {m.objectives.map((o, i) => (
           <li key={o.description} className={met[i] ? 'is-met' : ''}>
             <span className="objectives__box" aria-hidden="true" />
             <span>
               {o.description}
-              <span className="sr-only">{met[i] ? ' (done)' : ''}</span>
+              <span className="sr-only">{met[i] ? t('mission.objectiveDone') : ''}</span>
             </span>
           </li>
         ))}
@@ -79,10 +81,10 @@ export function MissionTab({ onShowReference }: { onShowReference: () => void })
       </ul>
       {m.introduces.length > 0 && (
         <>
-          <h3>New this mission</h3>
+          <h3>{t('mission.newThisMission')}</h3>
           <div className="chip-row">
             {m.introduces.map((f) => (
-              <button key={f} className="fnchip" onClick={onShowReference} title="Show in Reference">
+              <button key={f} className="fnchip" onClick={onShowReference} title={t('mission.showInReference')}>
                 {f}()
               </button>
             ))}
@@ -91,7 +93,7 @@ export function MissionTab({ onShowReference }: { onShowReference: () => void })
       )}
       {m.crops.length > 0 && (
         <>
-          <h3>Seeds available</h3>
+          <h3>{t('mission.seedsAvailable')}</h3>
           <div className="chip-row">
             {m.crops.map((c) => (
               <span key={c} className="chip">
@@ -99,7 +101,7 @@ export function MissionTab({ onShowReference }: { onShowReference: () => void })
                 {CROPS[c].label}
                 {costEntries(CROPS[c].cost).length > 0 && (
                   <span className="chip__note">
-                    costs{' '}
+                    {t('mission.costs')}{' '}
                     {costEntries(CROPS[c].cost)
                       .map(([k, n]) => `${n} ${k}`)
                       .join(', ')}
@@ -110,25 +112,25 @@ export function MissionTab({ onShowReference }: { onShowReference: () => void })
           </div>
         </>
       )}
-      <h3>{save.completed[m.id] ? 'Reward (collected)' : 'Reward'}</h3>
+      <h3>{save.completed[m.id] ? t('mission.rewardCollected') : t('mission.reward')}</h3>
       <div className="chip-row">
         <CostChips cost={m.reward} />
       </div>
-      <h3>Efficiency</h3>
+      <h3>{t('mission.efficiency')}</h3>
       <table className="record">
         <thead>
           <tr>
             <th scope="col">
-              <span className="sr-only">Measure</span>
+              <span className="sr-only">{t('mission.measure')}</span>
             </th>
-            <th scope="col">Last run</th>
-            <th scope="col">Best</th>
+            <th scope="col">{t('mission.lastRun')}</th>
+            <th scope="col">{t('mission.best')}</th>
           </tr>
         </thead>
         <tbody>
           {(['ticks', 'actions', 'instructions'] as const).map((k) => (
             <tr key={k}>
-              <th scope="row">{k[0]!.toUpperCase() + k.slice(1)}</th>
+              <th scope="row">{t(METRIC_KEYS[k])}</th>
               <td>{lastRun ? formatCount(lastRun[k]) : '–'}</td>
               <td>{best ? formatCount(best[k]) : '–'}</td>
             </tr>

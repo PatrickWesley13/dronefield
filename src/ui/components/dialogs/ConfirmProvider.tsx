@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
+import { useT } from '@/i18n/context';
 
 export interface ConfirmRequest {
   readonly title: string;
@@ -21,6 +22,7 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
   const resolver = useRef<((v: boolean) => void) | null>(null);
   const dialog = useRef<HTMLDialogElement>(null);
   const cancel = useRef<HTMLButtonElement>(null);
+  const { t } = useT();
 
   const confirm = useCallback<Confirm>((req) => {
     setRequest(req);
@@ -58,7 +60,7 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
             <p>{request.body}</p>
             <div className="dialog__actions">
               <button className="btn" ref={cancel} onClick={() => settle(false)}>
-                Cancel
+                {t('app.cancel')}
               </button>
               <button className="btn btn--primary" onClick={() => settle(true)}>
                 {request.confirmLabel}

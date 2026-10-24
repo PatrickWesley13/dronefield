@@ -1,19 +1,31 @@
 import type { SpeedLevel } from '@/persistence';
 import { SPEEDS, speedOption } from '@/runtime';
+import { useT } from '@/i18n/context';
+import type { MessageKey } from '@/i18n/en';
 import { useController, useGame } from '../../GameContext';
 import { useConfirm } from '../dialogs/ConfirmProvider';
+
+const SPEED_KEYS: Readonly<Record<SpeedLevel, MessageKey>> = {
+  1: 'speed.slow',
+  2: 'speed.relaxed',
+  3: 'speed.normal',
+  4: 'speed.fast',
+  5: 'speed.veryFast',
+  6: 'speed.instant',
+};
 
 export function useResetField(): () => Promise<void> {
   const controller = useController();
   const { level, playback } = useGame();
   const confirm = useConfirm();
+  const { t } = useT();
   return async () => {
     if (playback) return;
     if (level.kind === 'sandbox') {
       const ok = await confirm({
-        title: 'Clear your farm?',
-        body: 'Every crop in the field is removed and the drone returns to x 0, y 0. Your stored crops and upgrades are kept.',
-        confirmLabel: 'Clear field',
+        title: t('dialog.clearTitle'),
+        body: t('dialog.clearBody'),
+        confirmLabel: t('dialog.clearConfirm'),
       });
       if (!ok) return;
     }
@@ -25,16 +37,15 @@ export function Toolbar() {
   const controller = useController();
   const { playback, save } = useGame();
   const resetField = useResetField();
+  const { t } = useT();
   const running = playback === 'running';
   const paused = playback === 'paused';
   const speed = speedOption(save.settings.speed);
+  const speedLabel = t(SPEED_KEYS[speed.level]);
+  const runAction = t(running ? 'toolbar.pause' : paused ? 'toolbar.resume' : 'toolbar.run');
   return (
     <div className="toolbar">
-      <button
-        className="btn btn--primary"
-        onClick={() => controller.toggleRun()}
-        title={`${running ? 'Pause' : paused ? 'Resume' : 'Run'} (Ctrl+Enter)`}
-      >
+      <button className="btn btn--primary" onClick={() => controller.toggleRun()} title={t('toolbar.runTitle', { action: runAction })}>
         <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
           {running ? (
             <>
@@ -45,29 +56,29 @@ export function Toolbar() {
             <path d="M4 2.5v11l9-5.5z" />
           )}
         </svg>
-        {running ? 'Pause' : paused ? 'Resume' : 'Run'}
+        {runAction}
       </button>
-      <button className="btn" onClick={() => controller.stepLine()} title="Run one line (F10)">
+      <button className="btn" onClick={() => controller.stepLine()} title={t('toolbar.stepTitle')}>
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
           <path d="M3 4h7M3 8h4M9 8l3 3-3 3" />
         </svg>
-        Step
+        {t('toolbar.step')}
       </button>
-      <button className="btn" onClick={() => controller.stop()} disabled={!playback} title="Stop (Ctrl+Shift+Enter)">
+      <button className="btn" onClick={() => controller.stop()} disabled={!playback} title={t('toolbar.stopTitle')}>
         <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
           <rect x="3.5" y="3.5" width="9" height="9" rx="1.5" />
         </svg>
-        Stop
+        {t('toolbar.stop')}
       </button>
       <span className="toolbar__sep" aria-hidden="true" />
-      <button className="btn" onClick={() => void resetField()} disabled={!!playback} title="Reset the field (Alt+R)">
+      <button className="btn" onClick={() => void resetField()} disabled={!!playback} title={t('toolbar.resetTitle')}>
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
           <path d="M3 8a5 5 0 1 0 1.6-3.7M3 2.5v2.8h2.8" />
         </svg>
-        Reset field
+        {t('toolbar.resetField')}
       </button>
       <label className="speed" id="speed-control">
-        Speed
+        {t('toolbar.speed')}
         <input
           type="range"
           min={1}
@@ -75,9 +86,9 @@ export function Toolbar() {
           step={1}
           value={save.settings.speed}
           onChange={(e) => controller.updateSettings({ speed: Number(e.target.value) as SpeedLevel })}
-          aria-valuetext={speed.label}
+          aria-valuetext={speedLabel}
         />
-        <output>{speed.label}</output>
+        <output>{speedLabel}</output>
       </label>
     </div>
   );

@@ -1,10 +1,12 @@
 import { MISSIONS } from '@/missions';
 import { SANDBOX_ID } from '@/persistence';
 import { isMissionUnlocked, isSandboxUnlocked } from '@/progression';
+import { useT } from '@/i18n/context';
 import { formatCount } from '../../format';
 import { useController, useGame } from '../../GameContext';
 
 export function LevelsTab({ onSelected }: { onSelected: () => void }) {
+  const { t } = useT();
   const { save, level } = useGame();
   const controller = useController();
   const select = (id: string) => {
@@ -14,9 +16,7 @@ export function LevelsTab({ onSelected }: { onSelected: () => void }) {
   const farmOpen = isSandboxUnlocked(save);
   return (
     <>
-      <p className="muted">
-        {Object.keys(save.completed).length} of {MISSIONS.length} missions complete. Your code for each level is saved separately.
-      </p>
+      <p className="muted">{t('levels.progress', { done: Object.keys(save.completed).length, total: MISSIONS.length })}</p>
       <ul className="levels">
         <li>
           <button
@@ -27,7 +27,8 @@ export function LevelsTab({ onSelected }: { onSelected: () => void }) {
           >
             <span className="level__badge">{farmOpen ? '★' : '🔒'}</span>
             <span className="level__title">
-              Open farm<small>{farmOpen ? 'Sandbox: grow crops for upgrades' : 'Unlocks after Planting Season'}</small>
+              {t('mission.openFarm')}
+              <small>{farmOpen ? t('levels.farmSandbox') : t('levels.farmLocked')}</small>
             </span>
             <span />
           </button>
@@ -48,7 +49,7 @@ export function LevelsTab({ onSelected }: { onSelected: () => void }) {
                   {m.title}
                   <small>{m.concept}</small>
                 </span>
-                <span className="level__best">{best ? `${formatCount(best.ticks)} ticks` : ''}</span>
+                <span className="level__best">{best ? t('levels.ticks', { count: best.ticks, value: formatCount(best.ticks) }) : ''}</span>
               </button>
             </li>
           );

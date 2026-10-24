@@ -1,7 +1,8 @@
 import type { CropId } from '@/domain/crops';
 import type { FarmSnapshot } from '@/domain/farmSnapshot';
+import type { Locale } from '@/i18n/locales';
 
-export const SAVE_VERSION = 2;
+export const SAVE_VERSION = 3;
 
 export type MotionPreference = 'auto' | 'full' | 'reduced';
 export type ThemePreference = 'system' | 'light' | 'dark';
@@ -13,6 +14,8 @@ export interface Settings {
   readonly motion: MotionPreference;
   readonly showCoordinates: boolean;
   readonly theme: ThemePreference;
+  /** null means "follow the browser language", resolved when the app loads. */
+  readonly language: Locale | null;
 }
 
 export interface BestRun {
@@ -48,7 +51,14 @@ export interface SaveData {
 
 export const SANDBOX_ID = 'farm';
 
-export const DEFAULT_SETTINGS: Settings = { speed: 3, sound: true, motion: 'auto', showCoordinates: true, theme: 'system' };
+export const DEFAULT_SETTINGS: Settings = {
+  speed: 3,
+  sound: true,
+  motion: 'auto',
+  showCoordinates: true,
+  theme: 'system',
+  language: null,
+};
 
 export function createDefaultSave(): SaveData {
   return {

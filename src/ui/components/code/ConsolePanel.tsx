@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import type { LogKind } from '@/app/consoleLog';
+import { useT } from '@/i18n/context';
 import { useConsoleEntries, useController } from '../../GameContext';
 
 const KIND_CLASS: Readonly<Record<LogKind, string>> = {
@@ -15,27 +16,28 @@ const KIND_CLASS: Readonly<Record<LogKind, string>> = {
 export function ConsolePanel({ onGotoLine }: { onGotoLine: (line: number) => void }) {
   const entries = useConsoleEntries();
   const { log } = useController();
+  const { t } = useT();
   const list = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const el = list.current;
     if (el) el.scrollTop = el.scrollHeight;
   }, [entries]);
   return (
-    <section className="console" aria-label="Console" id="console">
+    <section className="console" aria-label={t('console.label')} id="console">
       <div className="console__head">
-        <h2>Console</h2>
+        <h2>{t('console.label')}</h2>
         <button className="btn btn--small" onClick={() => log.clear()}>
-          Clear
+          {t('console.clear')}
         </button>
       </div>
       <div className="console__log" ref={list} role="log" aria-live="polite">
-        {entries.length === 0 && <p className="console__empty">console.log() output, warnings and errors show up here.</p>}
+        {entries.length === 0 && <p className="console__empty">{t('console.empty')}</p>}
         {entries.map((e) => (
           <div key={e.id} className={KIND_CLASS[e.kind]}>
             {e.line !== null && (
               <>
                 <button className="console__line" onClick={() => onGotoLine(e.line!)}>
-                  Line {e.line}
+                  {t('console.line', { line: e.line })}
                 </button>
                 :{' '}
               </>

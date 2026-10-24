@@ -6,6 +6,7 @@ export default defineConfig({
   use: {
     baseURL: 'http://localhost:4173',
     viewport: { width: 1440, height: 900 },
+    locale: 'en-US',
     launchOptions: process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {},
   },
   webServer: { command: 'npm run preview -- --port 4173 --strictPort', port: 4173, reuseExistingServer: true },
