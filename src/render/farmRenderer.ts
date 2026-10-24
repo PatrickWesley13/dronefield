@@ -100,12 +100,12 @@ export class FarmRenderer {
     const L = this.layout(farm);
     const tileTopLeft = (x: number, y: number): [number, number] => [L.ox + x * L.ts, L.oy + (farm.height - 1 - y) * L.ts];
 
-    // plot frame
-    c.fillStyle = 'rgba(0,0,0,.28)';
-    this.roundRect(L.ox - 10, L.oy - 6, L.fw + 20, L.fh + 22, 14);
+    // plot frame: a printed grid sheet on a board
+    c.fillStyle = 'rgba(40,30,15,.18)';
+    this.roundRect(L.ox - 10, L.oy - 6, L.fw + 20, L.fh + 22, 6);
     c.fill();
-    c.fillStyle = '#3c2a1e';
-    this.roundRect(L.ox - 8, L.oy - 8, L.fw + 16, L.fh + 16, 12);
+    c.fillStyle = '#2f2418';
+    this.roundRect(L.ox - 8, L.oy - 8, L.fw + 16, L.fh + 16, 4);
     c.fill();
     c.save();
     this.roundRect(L.ox, L.oy, L.fw, L.fh, 6);
@@ -173,7 +173,7 @@ export class FarmRenderer {
     const ts = Math.max(
       12,
       Math.min(
-        96,
+        150,
         Math.floor(Math.min((this.width - padX * 2 - coords) / farm.width, (this.height - padTop - padBottom - coords) / farm.height)),
       ),
     );
@@ -206,7 +206,7 @@ export class FarmRenderer {
 
   private coordinates(L: Layout, farm: Farm): void {
     const c = this.ctx;
-    c.fillStyle = 'rgba(220,235,228,.6)';
+    c.fillStyle = 'rgba(47,36,24,.7)';
     c.font = `600 ${Math.max(10, Math.min(13, L.ts * 0.22))}px ${this.font()}`;
     c.textAlign = 'center';
     c.textBaseline = 'top';
