@@ -1,0 +1,66 @@
+/* Design tokens. Light is the base; dark applies by system preference or explicit choice. */
+:root {
+  --bg: #e6ece1;
+  --panel: #f6f8f1;
+  --panel-2: #edf1e6;
+  --line: #cbd6c6;
+  --text: #1d2e2b;
+  --muted: #5a6e68;
+  --accent: #9a6c0c;
+  --accent-fill: #e7ae2f;
+  --accent-ink: #231a03;
+  --ok: #2c7f47;
+  --warn: #a9581a;
+  --err: #b7354a;
+  --info: #2a6f8a;
+  --chip: #e3e9dc;
+  --ed-bg: #1c2b2d;
+  --ed-gutter: #1f3133;
+  --ed-text: #dfe8de;
+  --ed-muted: #6f8a85;
+  --ed-line: #2c4244;
+  --stage-a: #2c4a47;
+  --stage-b: #1c2f31;
+  --ui: 'Bricolage Grotesque', 'Avenir Next', 'Segoe UI', system-ui, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  color-scheme: light;
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --bg: #172527;
+    --panel: #1f3133;
+    --panel-2: #263b3d;
+    --line: #33494a;
+    --text: #e6eee4;
+    --muted: #98aea8;
+    --accent: #f2c35e;
+    --accent-fill: #f0bb4a;
+    --accent-ink: #2a1e02;
+    --ok: #8bd39d;
+    --warn: #f2a560;
+    --err: #f07f8c;
+    --info: #86c7dc;
+    --chip: #2b4143;
+    color-scheme: dark;
+  }
+}
+:root[data-theme='dark'] {
+  --bg: #172527;
+  --panel: #1f3133;
+  --panel-2: #263b3d;
+  --line: #33494a;
+  --text: #e6eee4;
+  --muted: #98aea8;
+  --accent: #f2c35e;
+  --accent-fill: #f0bb4a;
+  --accent-ink: #2a1e02;
+  --ok: #8bd39d;
+  --warn: #f2a560;
+  --err: #f07f8c;
+  --info: #86c7dc;
+  --chip: #2b4143;
+  color-scheme: dark;
+}
