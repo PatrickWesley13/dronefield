@@ -15,7 +15,7 @@ body,
 body {
   background: var(--bg);
   color: var(--text);
-  font: 15px/1.45 var(--ui);
+  font: 15px/1.5 var(--ui);
   overflow: hidden;
   -webkit-font-smoothing: antialiased;
 }
@@ -57,9 +57,9 @@ code {
 /* ---------- buttons & chips */
 .btn {
   border: 1px solid var(--line);
-  background: var(--panel-2);
-  padding: 7px 13px;
-  border-radius: 9px;
+  background: var(--panel);
+  padding: 6px 12px;
+  border-radius: 3px;
   font-weight: 600;
   font-size: 14px;
   display: inline-flex;
@@ -83,7 +83,7 @@ code {
   color: var(--accent-ink);
 }
 .btn--primary:hover:not(:disabled) {
-  filter: brightness(1.06);
+  background: color-mix(in srgb, var(--accent-fill) 88%, var(--text));
   border-color: var(--accent-fill);
 }
 .btn--danger {
@@ -101,11 +101,11 @@ code {
   font-size: 12.5px;
 }
 .iconbtn {
-  width: 36px;
-  height: 36px;
+  width: 34px;
+  height: 34px;
   display: grid;
   place-items: center;
-  border-radius: 10px;
+  border-radius: 3px;
   border: 1px solid var(--line);
   background: transparent;
 }
@@ -120,8 +120,8 @@ code {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 3px 9px 3px 6px;
-  border-radius: 999px;
+  padding: 2px 8px 2px 5px;
+  border-radius: 3px;
   background: var(--chip);
   font-weight: 600;
   font-size: 13.5px;
@@ -170,11 +170,9 @@ code {
   gap: 10px;
 }
 .brand h1 {
-  font-size: 21px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
+  font: 800 22px/1 var(--display);
+  letter-spacing: -0.01em;
   margin: 0;
-  line-height: 1;
 }
 .brand small {
   display: block;
@@ -302,25 +300,25 @@ code {
   padding: 18px 18px 28px;
 }
 .pane h2 {
-  font-size: 23px;
-  line-height: 1.15;
-  letter-spacing: -0.015em;
+  font: 800 30px/1.05 var(--display);
+  letter-spacing: -0.01em;
   margin: 0 0 4px;
-  font-weight: 800;
 }
 .pane h3 {
-  font-size: 15px;
-  margin: 22px 0 8px;
-  font-weight: 700;
+  font-size: 13px;
+  margin: 24px 0 8px;
+  font-weight: 600;
+  color: var(--muted);
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 5px;
 }
 .pane p {
   margin: 0 0 10px;
   max-width: 60ch;
 }
 .concept {
-  color: var(--accent);
-  font-weight: 600;
-  font-size: 14px;
+  color: var(--muted);
+  font: italic 500 16px/1.3 var(--display);
   margin: 0 0 14px !important;
 }
 .objectives {
@@ -334,18 +332,17 @@ code {
   display: flex;
   gap: 10px;
   align-items: flex-start;
-  padding: 9px 11px;
-  border-radius: 10px;
-  background: var(--panel-2);
+  padding: 6px 0;
   font-weight: 500;
+  border-bottom: 1px dashed var(--line);
 }
 .objectives__box {
   flex: none;
-  width: 18px;
-  height: 18px;
-  border-radius: 5px;
-  border: 2px solid var(--muted);
-  margin-top: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 2px;
+  border: 1.5px solid var(--text);
+  margin-top: 3px;
   display: grid;
   place-items: center;
 }
@@ -353,14 +350,14 @@ code {
   color: var(--muted);
 }
 .objectives li.is-met .objectives__box {
-  background: var(--ok);
-  border-color: var(--ok);
+  background: var(--accent);
+  border-color: var(--accent);
 }
 .objectives li.is-met .objectives__box::after {
   content: '';
-  width: 8px;
+  width: 7px;
   height: 4px;
-  border: 2.5px solid var(--panel);
+  border: 2px solid var(--panel);
   border-top: 0;
   border-right: 0;
   transform: rotate(-45deg) translate(1px, -1px);
@@ -412,17 +409,17 @@ code {
   gap: 10px;
   align-items: center;
   text-align: left;
-  padding: 9px 10px;
-  border-radius: 10px;
-  border: 1px solid transparent;
+  padding: 8px 0;
+  border: 0;
+  border-bottom: 1px solid var(--line);
   background: transparent;
 }
 .level:hover:not(:disabled) {
   background: var(--panel-2);
 }
 .level[aria-current='true'] {
-  background: var(--panel-2);
-  border-color: var(--line);
+  background: transparent;
+  box-shadow: inset 3px 0 0 var(--accent-fill);
 }
 .level:disabled {
   opacity: 0.45;
@@ -431,15 +428,14 @@ code {
 .level__badge {
   width: 26px;
   height: 26px;
-  border-radius: 8px;
+  border-radius: 2px;
   display: grid;
   place-items: center;
-  font-weight: 700;
-  font-size: 13px;
+  font: 600 13px var(--mono);
   background: var(--chip);
 }
 .level--done .level__badge {
-  background: var(--ok);
+  background: var(--accent);
   color: var(--panel);
 }
 .level--farm .level__badge {
@@ -464,16 +460,13 @@ code {
 .note {
   font-size: 13.5px;
   color: var(--muted);
-  padding: 10px 12px;
-  border-radius: 10px;
-  background: var(--panel-2);
+  padding: 0 0 0 12px;
+  border-left: 3px solid var(--accent-fill);
   margin-bottom: 14px;
 }
 .upgrade {
-  padding: 12px;
-  border-radius: 12px;
-  border: 1px solid var(--line);
-  margin-bottom: 8px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
   display: grid;
   gap: 6px;
 }
@@ -576,8 +569,9 @@ kbd {
   pointer-events: none;
 }
 .stage__hud .chip {
-  background: rgba(14, 26, 27, 0.75);
-  color: #eaf1e8;
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--line);
 }
 .stage__runbar {
   position: absolute;
@@ -587,13 +581,13 @@ kbd {
   display: flex;
   gap: 16px;
   flex-wrap: wrap;
-  color: #cfe0da;
+  color: var(--muted);
   font-size: 13.5px;
   font-variant-numeric: tabular-nums;
   pointer-events: none;
 }
 .stage__runbar b {
-  color: #fff;
+  color: var(--text);
   font-weight: 700;
 }
 .banner {
@@ -604,9 +598,9 @@ kbd {
   width: min(440px, calc(100% - 28px));
   background: var(--panel);
   color: var(--text);
-  border-radius: 8px;
+  border-radius: 3px;
   padding: 18px 20px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--text);
 }
 .banner h3 {
   margin: 0 0 4px;
