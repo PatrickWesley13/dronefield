@@ -8,6 +8,7 @@ import { DebouncedSaveRepository, WebStorageSaveRepository } from '@/persistence
 import { UPGRADES } from '@/progression';
 import { App } from '@/ui/App';
 import { GameProvider } from '@/ui/GameContext';
+import { I18nBridge } from '@/ui/I18nBridge';
 import '@/ui/styles/tokens.css';
 import '@/ui/styles/app.css';
 
@@ -34,7 +35,9 @@ controller = new GameController({ repository, sound });
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <GameProvider controller={controller}>
-      <App />
+      <I18nBridge>
+        <App />
+      </I18nBridge>
     </GameProvider>
   </StrictMode>,
 );

@@ -1,29 +1,43 @@
 import { DRONE_API, type ApiGroup } from '@/api';
 import { unlockHint } from '@/progression';
+import { useT } from '@/i18n/context';
+import type { MessageKey } from '@/i18n/en';
 import { useGame } from '../../GameContext';
+
+type Translate = ReturnType<typeof useT>['t'];
 
 const GROUPS: readonly ApiGroup[] = ['Movement', 'Inspection', 'Farming', 'Resources'];
 
-const BUILTINS: ReadonlyArray<{ sig: string; doc: string; example?: string }> = [
-  {
-    sig: 'console.log(...values)',
-    doc: 'Writes to the console. console.info, console.warn and console.error work too, and console.clear() empties it.',
-    example: 'console.log("at", getPosX(), getPosY());',
-  },
-  {
-    sig: 'Math.floor, ceil, round, trunc, abs, min, max, sqrt, pow, sign, random, PI',
-    doc: 'Number helpers. Math.random() is seeded, so a run always replays the same way.',
-  },
-  {
-    sig: 'Object.keys(o), Object.values(o), Object.entries(o)',
-    doc: 'Look inside objects, like the one getInventory() returns.',
-    example: 'for (const [crop, n] of Object.entries(getInventory())) {}',
-  },
-  { sig: 'Array.isArray(v), Array.from(v, fn)', doc: 'Array.from({ length: 4 }, (_, i) => i) makes [0, 1, 2, 3].' },
-  { sig: 'JSON.stringify(v, null, 2), JSON.parse(text)', doc: 'Turn values into text and back.' },
-  { sig: 'Number(v), String(v), Boolean(v), parseInt(s), parseFloat(s)', doc: 'Conversions between values.' },
-];
+const GROUP_KEYS: Record<ApiGroup, MessageKey> = {
+  Movement: 'reference.group.Movement',
+  Inspection: 'reference.group.Inspection',
+  Farming: 'reference.group.Farming',
+  Resources: 'reference.group.Resources',
+};
 
+function builtins(t: Translate): ReadonlyArray<{ sig: string; doc: string; example?: string }> {
+  return [
+    {
+      sig: 'console.log(...values)',
+      doc: t('reference.builtin.console'),
+      example: 'console.log("at", getPosX(), getPosY());',
+    },
+    {
+      sig: 'Math.floor, ceil, round, trunc, abs, min, max, sqrt, pow, sign, random, PI',
+      doc: t('reference.builtin.math'),
+    },
+    {
+      sig: 'Object.keys(o), Object.values(o), Object.entries(o)',
+      doc: t('reference.builtin.objects'),
+      example: 'for (const [crop, n] of Object.entries(getInventory())) {}',
+    },
+    { sig: 'Array.isArray(v), Array.from(v, fn)', doc: t('reference.builtin.array') },
+    { sig: 'JSON.stringify(v, null, 2), JSON.parse(text)', doc: t('reference.builtin.json') },
+    { sig: 'Number(v), String(v), Boolean(v), parseInt(s), parseFloat(s)', doc: t('reference.builtin.conversions') },
+  ];
+}
+
+// The cheat sheet is code, so it stays untranslated.
 const CHEAT_SHEET = `// output
 console.log("pos", getPosX(), getPosY());
 
@@ -51,23 +65,18 @@ const next = scan("east")?.crop ?? "nothing";
 
 export function ReferenceTab({ onInsert }: { onInsert: (text: string) => void }) {
   const { save } = useGame();
+  const { t } = useT();
   return (
     <>
-      <h2>Reference</h2>
-      <p>Drone scripts are JavaScript, minus the parts that could reach outside the game. Click a function to insert it.</p>
-      <h3>Directions and coordinates</h3>
-      <p>
-        x grows to the east, y grows to the north. The south-west corner is x 0, y 0. Directions are the strings "north", "south", "east"
-        and "west".
-      </p>
-      <h3>Time</h3>
-      <p>
-        Moving takes 2 ticks. plant(), harvest() and water() take 1 tick each, and wait(n) takes n. Wheat ripens in 8 ticks, carrots in 16,
-        tomatoes in 30 and crystals in 60. Watering doubles growth speed. Looking around with get… and can… functions takes no time.
-      </p>
+      <h2>{t('reference.title')}</h2>
+      <p>{t('reference.intro')}</p>
+      <h3>{t('reference.directionsTitle')}</h3>
+      <p>{t('reference.directions')}</p>
+      <h3>{t('reference.timeTitle')}</h3>
+      <p>{t('reference.time')}</p>
       {GROUPS.map((g) => (
         <section key={g}>
-          <h3>{g}</h3>
+          <h3>{t(GROUP_KEYS[g])}</h3>
           {DRONE_API.filter((f) => f.group === g).map((f) => {
             const unlocked = save.unlockedFunctions.includes(f.name);
             return (
@@ -76,7 +85,7 @@ export function ReferenceTab({ onInsert }: { onInsert: (text: string) => void })
                   className="api__sig"
                   disabled={!unlocked}
                   onClick={() => onInsert(f.maxArgs ? `${f.name}()` : `${f.name}();`)}
-                  title={unlocked ? 'Insert into your code' : undefined}
+                  title={unlocked ? t('reference.insert') : undefined}
                 >
                   {f.signature}
                 </button>{' '}
@@ -87,55 +96,50 @@ export function ReferenceTab({ onInsert }: { onInsert: (text: string) => void })
                     {f.example && <pre>{f.example}</pre>}
                   </>
                 ) : (
-                  <p className="muted">Locked. {unlockHint(f.name)}</p>
+                  <p className="muted">
+                    {t('reference.locked')} {unlockHint(f.name)}
+                  </p>
                 )}
               </div>
             );
           })}
         </section>
       ))}
-      <h3>Built-in JavaScript</h3>
-      {BUILTINS.map((b) => (
+      <h3>{t('reference.builtins')}</h3>
+      {builtins(t).map((b) => (
         <div key={b.sig} className="api">
           <code className="api__sig api__sig--static">{b.sig}</code>
           <p>{b.doc}</p>
           {b.example && <pre>{b.example}</pre>}
         </div>
       ))}
-      <h3>What works</h3>
+      <h3>{t('reference.whatWorks')}</h3>
       <pre className="cheatsheet">{CHEAT_SHEET}</pre>
-      <p>
-        Not available: classes, <code>new</code>, <code>this</code>, try/catch/throw, async code, generators, imports, regular expressions
-        and browser APIs like <code>window</code>, <code>fetch</code> or <code>setTimeout</code>. Mixing types in maths or comparisons (like{' '}
-        <code>"a" - 1</code>) stops with an error instead of quietly producing NaN.
-      </p>
-      <h3>Safety limits</h3>
-      <p>
-        Missions stop after 1,000,000 steps, the Open farm after 20,000,000. A program that runs 50,000 steps without any action that takes
-        time is stopped as a likely endless loop.
-      </p>
-      <h3>Shortcuts</h3>
+      <p>{t('reference.unavailable')}</p>
+      <h3>{t('reference.limitsTitle')}</h3>
+      <p>{t('reference.limits')}</p>
+      <h3>{t('reference.shortcuts')}</h3>
       <dl className="keys">
         <dt>
           <kbd>Ctrl</kbd> <kbd>Enter</kbd>
         </dt>
-        <dd>Run, pause or resume</dd>
+        <dd>{t('reference.key.run')}</dd>
         <dt>
           <kbd>Ctrl</kbd> <kbd>Shift</kbd> <kbd>Enter</kbd>
         </dt>
-        <dd>Stop</dd>
+        <dd>{t('reference.key.stop')}</dd>
         <dt>
           <kbd>F10</kbd>
         </dt>
-        <dd>Run one line</dd>
+        <dd>{t('reference.key.step')}</dd>
         <dt>
           <kbd>Alt</kbd> <kbd>R</kbd>
         </dt>
-        <dd>Reset the field</dd>
+        <dd>{t('reference.key.reset')}</dd>
         <dt>
           <kbd>Ctrl</kbd> <kbd>Space</kbd>
         </dt>
-        <dd>Suggest completions</dd>
+        <dd>{t('reference.key.suggest')}</dd>
       </dl>
     </>
   );

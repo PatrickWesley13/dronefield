@@ -1,9 +1,16 @@
 import { CROP_IDS, isCropId, type CropId } from '@/domain/crops';
 import type { FarmSnapshot } from '@/domain/farmSnapshot';
+import { isLocale } from '@/i18n/locales';
 import { SAVE_VERSION, SANDBOX_ID, createDefaultSave, type BestRun, type SaveData, type Settings, type SpeedLevel } from './saveData';
 
 type Raw = Record<string, unknown>;
 const isRecord = (v: unknown): v is Raw => !!v && typeof v === 'object' && !Array.isArray(v);
+
+/** v2 → v3: adds the language setting, which starts unset so the browser language is used. */
+function migrateV2(raw: Raw): Raw {
+  const settings = isRecord(raw.settings) ? raw.settings : {};
+  return { ...raw, version: 3, settings: { ...settings, language: null } };
+}
 
 /** v1 (the first single-file release) → v2: field renames, `print` replaced by console.log. */
 function migrateV1(raw: Raw): Raw {
@@ -22,7 +29,7 @@ function migrateV1(raw: Raw): Raw {
   };
 }
 
-const MIGRATIONS: Readonly<Record<number, (raw: Raw) => Raw>> = { 1: migrateV1 };
+const MIGRATIONS: Readonly<Record<number, (raw: Raw) => Raw>> = { 1: migrateV1, 2: migrateV2 };
 
 export interface MigrationContext {
   readonly knownLevels: ReadonlySet<string>;
@@ -81,6 +88,7 @@ function sanitize(raw: Raw, ctx: MigrationContext): SaveData {
     motion: s.motion === 'full' || s.motion === 'reduced' || s.motion === 'auto' ? s.motion : base.settings.motion,
     showCoordinates: typeof s.showCoordinates === 'boolean' ? s.showCoordinates : base.settings.showCoordinates,
     theme: s.theme === 'light' || s.theme === 'dark' || s.theme === 'system' ? s.theme : base.settings.theme,
+    language: isLocale(s.language) ? s.language : null,
   };
 
   const lt = isRecord(raw.lifetime) ? raw.lifetime : {};

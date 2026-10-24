@@ -103,3 +103,13 @@ test('autocomplete suggests game functions and console members', async ({ page }
   await page.keyboard.press('Enter');
   await expect(page.locator('.cm-content')).toHaveText('move()');
 });
+
+test('language can be switched and persists', async ({ page }) => {
+  await page.getByRole('button', { name: 'Skip tour' }).click();
+  await page.getByRole('button', { name: 'Settings' }).click();
+  await page.getByLabel('Language').selectOption('pt-BR');
+  await page.getByRole('button', { name: 'Pronto' }).click();
+  await expect(page.getByRole('button', { name: /^Executar/ })).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole('button', { name: /^Executar/ })).toBeVisible();
+});

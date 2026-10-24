@@ -1,4 +1,5 @@
 import { CROP_IDS } from '@/domain/crops';
+import { useT } from '@/i18n/context';
 import { formatCount } from '../../format';
 import { useController, useGame } from '../../GameContext';
 import { CostChips, CropChip } from '../CropIcon';
@@ -6,42 +7,40 @@ import { FarmCanvas } from './FarmCanvas';
 
 export function Stage() {
   const game = useGame();
+  const { t } = useT();
   const { hud, level } = game;
   const tickLimit = level.kind === 'mission' ? level.mission.tickLimit : undefined;
   const crops = CROP_IDS.filter((id) => hud.unlockedCrops.includes(id) || hud.inventory[id] > 0);
   return (
-    <section className="stage" aria-label="Farm">
+    <section className="stage" aria-label={t('stage.label')}>
       <FarmCanvas />
-      <div className="stage__hud" aria-label="Drone cargo">
+      <div className="stage__hud" aria-label={t('stage.cargo')}>
         {crops.map((id) => (
           <CropChip key={id} crop={id} amount={hud.inventory[id]} />
         ))}
-        {level.kind === 'mission' && hud.capacity < 50 && <span className="chip">cargo {hud.capacity} each</span>}
+        {level.kind === 'mission' && hud.capacity < 50 && <span className="chip">{t('stage.cargoEach', { capacity: hud.capacity })}</span>}
       </div>
       <div className="stage__runbar">
         <span>
-          Tick <b>{formatCount(hud.tick)}</b>
+          {t('stage.tick')} <b>{formatCount(hud.tick)}</b>
           {tickLimit ? ` / ${formatCount(tickLimit)}` : ''}
         </span>
         <span>
-          Drone{' '}
-          <b>
-            x {hud.drone.x}, y {hud.drone.y}
-          </b>
+          {t('stage.drone')} <b>{t('stage.position', { x: hud.drone.x, y: hud.drone.y })}</b>
         </span>
         {hud.actions !== null && (
           <span>
-            Actions <b>{formatCount(hud.actions)}</b>
+            {t('stage.actions')} <b>{formatCount(hud.actions)}</b>
           </span>
         )}
         {hud.instructions !== null && (
           <span>
-            Instructions <b>{formatCount(hud.instructions)}</b>
+            {t('stage.instructions')} <b>{formatCount(hud.instructions)}</b>
           </span>
         )}
       </div>
       <p className="sr-only" aria-live="polite">
-        {game.playback ? '' : `Drone at x ${hud.drone.x}, y ${hud.drone.y}. ${hud.tick} ticks.`}
+        {game.playback ? '' : t('stage.droneStatus', { x: hud.drone.x, y: hud.drone.y, tick: hud.tick })}
       </p>
       <ResultBanner />
     </section>
@@ -51,6 +50,7 @@ export function Stage() {
 function ResultBanner() {
   const { report } = useGame();
   const controller = useController();
+  const { t } = useT();
   if (!report) return null;
   const next = report.nextLevelId;
   return (
@@ -59,32 +59,35 @@ function ResultBanner() {
       {report.message && <p>{report.message}</p>}
       {report.reward && (
         <>
-          <p>Reward added to your stores:</p>
+          <p>{t('stage.rewardAdded')}</p>
           <div className="chip-row">
             <CostChips cost={report.reward} />
           </div>
         </>
       )}
-      {report.unlockedSandbox && <p>The Open farm is now unlocked. Grow crops there and spend them on upgrades.</p>}
+      {report.unlockedSandbox && <p>{t('stage.sandboxUnlocked')}</p>}
       <div className="banner__stats">
         <span>
-          <b>{formatCount(report.stats.ticks)}</b>ticks
+          <b>{formatCount(report.stats.ticks)}</b>
+          {t('stage.statTicks')}
         </span>
         <span>
-          <b>{formatCount(report.stats.actions)}</b>actions
+          <b>{formatCount(report.stats.actions)}</b>
+          {t('stage.statActions')}
         </span>
         <span>
-          <b>{formatCount(report.stats.instructions)}</b>instructions
+          <b>{formatCount(report.stats.instructions)}</b>
+          {t('stage.statInstructions')}
         </span>
       </div>
       <div className="banner__actions">
         {report.tone === 'success' && next && (
           <button className="btn btn--primary" onClick={() => controller.selectLevel(next)}>
-            {next === 'farm' ? 'Go to the Open farm' : 'Next mission'}
+            {next === 'farm' ? t('stage.goSandbox') : t('stage.nextMission')}
           </button>
         )}
         <button className="btn" onClick={() => controller.dismissReport()}>
-          {report.tone === 'success' ? 'Keep optimizing' : 'Back to the code'}
+          {report.tone === 'success' ? t('stage.keepOptimizing') : t('stage.backToCode')}
         </button>
       </div>
     </div>

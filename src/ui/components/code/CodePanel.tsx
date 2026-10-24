@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { fileName } from '@/app/levels';
+import { useT } from '@/i18n/context';
 import { CodeEditor } from '../../editor/CodeEditor';
 import { useController, useGame } from '../../GameContext';
 import { useConfirm } from '../dialogs/ConfirmProvider';
@@ -10,6 +11,7 @@ export function CodePanel({ insertRequest }: { insertRequest: { text: string; no
   const game = useGame();
   const controller = useController();
   const confirm = useConfirm();
+  const { t } = useT();
   const [reveal, setReveal] = useState<{ line: number; nonce: number } | null>(null);
   const scope = useMemo(
     () => ({ unlockedFunctions: new Set(game.save.unlockedFunctions), unlockedCrops: game.save.unlockedCrops }),
@@ -18,21 +20,21 @@ export function CodePanel({ insertRequest }: { insertRequest: { text: string; no
 
   const restoreStarter = async () => {
     const ok = await confirm({
-      title: 'Replace your code?',
-      body: 'Your current program for this level will be replaced with the starter code. This can’t be undone.',
-      confirmLabel: 'Replace code',
+      title: t('code.replaceTitle'),
+      body: t('code.replaceBody'),
+      confirmLabel: t('code.replaceConfirm'),
     });
     if (ok) controller.restoreStarterCode();
   };
 
   return (
-    <section className="code" aria-label="Program">
+    <section className="code" aria-label={t('code.label')}>
       <Toolbar />
       <div className="editor-head">
         <span className="editor-head__file">{fileName(game.level)}</span>
-        <span className="editor-head__state">Saved</span>
+        <span className="editor-head__state">{t('code.saved')}</span>
         <button className="btn btn--ghost" onClick={() => void restoreStarter()} disabled={!!game.playback}>
-          Starter code
+          {t('code.starter')}
         </button>
       </div>
       <CodeEditor

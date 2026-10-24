@@ -1,23 +1,26 @@
 import { CROP_IDS } from '@/domain/crops';
 import { MISSIONS, missionIndex } from '@/missions';
 import type { RunStatus } from '@/app/gameController';
+import { useT } from '@/i18n/context';
+import type { MessageKey } from '@/i18n/en';
 import { useController, useGame } from '../GameContext';
 import { CropChip } from './CropIcon';
 
-const STATUS_LABEL: Readonly<Record<RunStatus, string>> = {
-  idle: 'Idle',
-  running: 'Running',
-  paused: 'Paused',
-  finished: 'Finished',
-  complete: 'Complete',
-  failed: 'Failed',
-  error: 'Error',
-  stopped: 'Stopped',
+const STATUS_KEY: Readonly<Record<RunStatus, MessageKey>> = {
+  idle: 'status.idle',
+  running: 'status.running',
+  paused: 'status.paused',
+  finished: 'status.finished',
+  complete: 'status.complete',
+  failed: 'status.failed',
+  error: 'status.error',
+  stopped: 'status.stopped',
 };
 
 export function TopBar({ onOpenSettings, onOpenTour }: { onOpenSettings: () => void; onOpenTour: () => void }) {
   const game = useGame();
   const controller = useController();
+  const { t } = useT();
   const { level, save, hud } = game;
   const bank = level.kind === 'sandbox' ? hud.inventory : save.bank;
   const crops = CROP_IDS.filter((id) => save.unlockedCrops.includes(id) || bank[id] > 0);
@@ -34,34 +37,31 @@ export function TopBar({ onOpenSettings, onOpenTour }: { onOpenSettings: () => v
         </svg>
         <div>
           <h1>Dronefield</h1>
-          <small>Automated Harvest</small>
+          <small>{t('app.tagline')}</small>
         </div>
       </div>
       <div className="topbar__level">
         {level.kind === 'sandbox' ? (
           <>
-            Open farm <span>sandbox</span>
+            {t('top.openFarm')} <span>{t('top.sandbox')}</span>
           </>
         ) : (
           <>
-            {level.mission.title}{' '}
-            <span>
-              mission {missionIndex(level.id) + 1} of {MISSIONS.length}
-            </span>
+            {level.mission.title} <span>{t('top.missionOf', { index: missionIndex(level.id) + 1, total: MISSIONS.length })}</span>
           </>
         )}
       </div>
-      <div className="topbar__bank" aria-label="Your stored crops">
+      <div className="topbar__bank" aria-label={t('top.storedCrops')}>
         {crops.map((id) => (
           <CropChip key={id} crop={id} amount={bank[id]} />
         ))}
       </div>
       <div className="status" data-status={game.status} role="status" aria-live="polite">
         <i aria-hidden="true" />
-        <span>{STATUS_LABEL[game.status]}</span>
+        <span>{t(STATUS_KEY[game.status])}</span>
       </div>
       <div className="topbar__tools">
-        <button className="iconbtn" onClick={onOpenTour} aria-label="Replay the tour" title="Replay the tour">
+        <button className="iconbtn" onClick={onOpenTour} aria-label={t('top.replayTour')} title={t('top.replayTour')}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
             <circle cx="12" cy="12" r="9" />
             <path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6v.6" />
@@ -71,16 +71,16 @@ export function TopBar({ onOpenSettings, onOpenTour }: { onOpenSettings: () => v
         <button
           className="iconbtn"
           onClick={() => controller.updateSettings({ sound: !save.settings.sound })}
-          aria-label={save.settings.sound ? 'Mute sound' : 'Turn sound on'}
+          aria-label={save.settings.sound ? t('top.muteSound') : t('top.turnSoundOn')}
           aria-pressed={!save.settings.sound}
-          title={save.settings.sound ? 'Sound on' : 'Sound off'}
+          title={save.settings.sound ? t('top.soundOn') : t('top.soundOff')}
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" />
             {save.settings.sound ? <path d="M16 9a4.5 4.5 0 0 1 0 6M18.6 6.5a8 8 0 0 1 0 11" /> : <path d="M16.5 9.5l5 5M21.5 9.5l-5 5" />}
           </svg>
         </button>
-        <button className="iconbtn" onClick={onOpenSettings} aria-label="Settings" title="Settings">
+        <button className="iconbtn" onClick={onOpenSettings} aria-label={t('top.settings')} title={t('top.settings')}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
             <path d="M4 7h10M18 7h2M4 17h4M12 17h8" />
             <circle cx="16" cy="7" r="2.2" />

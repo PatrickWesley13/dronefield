@@ -47,13 +47,17 @@ describe('persistence', () => {
       farm: { w: 5, h: 5, tick: 9, drone: { x: 1, y: 1 }, tiles: [['soil', 'wheat', 3, 0]] },
     };
     const s = migrateSave(v1, ctx)!;
-    expect(s.version).toBe(2);
+    expect(s.version).toBe(3);
     expect(s.unlockedFunctions).toEqual(['move', 'harvest']);
     expect(s.currentLevel).toBe('m2');
-    expect(s.settings).toMatchObject({ speed: 5, motion: 'reduced', showCoordinates: false });
+    expect(s.settings).toMatchObject({ speed: 5, motion: 'reduced', showCoordinates: false, language: null });
     expect(s.lifetime.harvests).toBe(4);
     expect(s.farm?.tiles[0]).toEqual(['soil', 'wheat', 3, 0]);
     expect(s.code.m2).toBe('print(1)');
+  });
+  it('keeps a valid language and drops an unknown one', () => {
+    expect(migrateSave({ version: 3, settings: { language: 'pt-BR' } }, ctx)!.settings.language).toBe('pt-BR');
+    expect(migrateSave({ version: 3, settings: { language: 'klingon' } }, ctx)!.settings.language).toBeNull();
   });
   it('rejects unknown versions and junk', () => {
     expect(migrateSave(null, ctx)).toBeNull();
