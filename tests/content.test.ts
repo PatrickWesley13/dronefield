@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { CONTENT_CATALOGS } from '@/i18n/content';
-import { briefingText, missionText, translateKey } from '@/i18n/messages';
+import { briefingText, missionText, translateKey, translateMessage } from '@/i18n/messages';
+import { msg } from '@/shared/message';
 import { MISSIONS } from '@/missions';
 
 describe('game content translations', () => {
@@ -26,5 +27,18 @@ describe('game content translations', () => {
         expect(briefingText('es', m.id, i, line), `${m.id}.${i}`).not.toBe(line);
       });
     }
+  });
+
+  it('translates run report banners in each locale', () => {
+    const notDone = msg('report.notDone', 'Not quite');
+    expect(translateMessage('en', notDone)).toBe('Not quite');
+    expect(translateMessage('pt-BR', notDone)).toBe('Quase lá');
+    expect(translateMessage('es', notDone)).toBe('Casi');
+  });
+
+  it('fills the still-to-do list into the report message', () => {
+    const stillToDo = msg('report.stillToDo', 'fallback', { items: 'Collect 3 wheat' });
+    expect(translateMessage('pt-BR', stillToDo)).toContain('Collect 3 wheat');
+    expect(translateMessage('pt-BR', stillToDo)).toContain('Pendente');
   });
 });

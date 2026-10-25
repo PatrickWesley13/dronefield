@@ -12,11 +12,12 @@ import {
   type Value,
 } from '@/interpreter';
 import { evaluateMission, type Mission, type MissionStatus } from '@/missions';
+import type { Message } from '@/shared/message';
 
 export type RunOutcome =
   | { readonly kind: 'finished'; readonly status: MissionStatus | null }
   | { readonly kind: 'completed'; readonly status: MissionStatus }
-  | { readonly kind: 'failed'; readonly reason: string; readonly line: number | null; readonly status: MissionStatus }
+  | { readonly kind: 'failed'; readonly reason: Message; readonly line: number | null; readonly status: MissionStatus }
   | { readonly kind: 'error'; readonly error: ScriptError | Error }
   | { readonly kind: 'stopped' };
 

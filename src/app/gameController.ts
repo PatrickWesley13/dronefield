@@ -41,8 +41,8 @@ export interface CompletedRun extends RunStats {
 
 export interface RunReport {
   readonly tone: 'success' | 'problem';
-  readonly title: string;
-  readonly message: string;
+  readonly title: Message;
+  readonly message: Message | null;
   readonly stats: CompletedRun;
   readonly reward: Cost | null;
   readonly unlockedSandbox: boolean;
@@ -391,7 +391,7 @@ export class GameController {
         this.deps.sound.play('error');
         this.report = {
           tone: 'problem',
-          title: 'Mission failed',
+          title: msg('report.missionFailed', 'Mission failed'),
           message: outcome.reason,
           stats,
           reward: null,
@@ -406,9 +406,17 @@ export class GameController {
           const missing = level.mission.objectives
             .filter((_, i) => !outcome.status?.objectivesMet[i])
             .map((o) => o.description.toLowerCase());
-          const message = `Your program ended before every objective was met. Still to do: ${missing.join('; ')}.`;
-          this.log.add('warn', `Program finished, but the mission isn't done yet. Still to do: ${missing.join('; ')}.`);
-          this.report = { tone: 'problem', title: 'Not quite', message, stats, reward: null, unlockedSandbox: false, nextLevelId: null };
+          const items = missing.join('; ');
+          this.log.add('warn', `Program finished, but the mission isn't done yet. Still to do: ${items}.`);
+          this.report = {
+            tone: 'problem',
+            title: msg('report.notDone', 'Not quite'),
+            message: msg('report.stillToDo', `Your program ended before every objective was met. Still to do: ${items}.`, { items }),
+            stats,
+            reward: null,
+            unlockedSandbox: false,
+            nextLevelId: null,
+          };
         } else this.log.add('success', 'Program finished.');
         break;
       case 'completed': {
@@ -422,14 +430,17 @@ export class GameController {
         this.log.add('success', `Mission complete: ${level.mission.title}.`);
         const next = MISSIONS[missionIndex(level.id) + 1];
         const message = result.firstTime
-          ? ''
+          ? undefined
           : result.newBest
-            ? `New best: ${stats.ticks} ticks (was ${result.previousBest?.ticks}).`
-            : `Best so far: ${save.best[level.id]?.ticks} ticks.`;
+            ? msg('report.newBest', `New best: ${stats.ticks} ticks (was ${result.previousBest?.ticks}).`, {
+                ticks: stats.ticks,
+                previous: result.previousBest?.ticks ?? 0,
+              })
+            : msg('report.bestSoFar', `Best so far: ${save.best[level.id]?.ticks} ticks.`, { ticks: save.best[level.id]?.ticks ?? 0 });
         this.report = {
           tone: 'success',
-          title: next ? 'Mission complete' : 'Every mission complete',
-          message,
+          title: next ? msg('report.missionComplete', 'Mission complete') : msg('report.everyMissionComplete', 'Every mission complete'),
+          message: message ?? null,
           stats,
           reward: result.firstTime ? level.mission.reward : null,
           unlockedSandbox: !sandboxBefore && isSandboxUnlocked(save),

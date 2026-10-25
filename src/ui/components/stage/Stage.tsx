@@ -1,5 +1,6 @@
 import { CROP_IDS } from '@/domain/crops';
 import { useT } from '@/i18n/context';
+import { translateMessage } from '@/i18n/messages';
 import { formatCount } from '../../format';
 import { useController, useGame } from '../../GameContext';
 import { CostChips, CropChip } from '../CropIcon';
@@ -50,13 +51,13 @@ export function Stage() {
 function ResultBanner() {
   const { report } = useGame();
   const controller = useController();
-  const { t } = useT();
+  const { t, locale } = useT();
   if (!report) return null;
   const next = report.nextLevelId;
   return (
     <div className={`banner banner--${report.tone}`} role="dialog" aria-labelledby="banner-title">
-      <h3 id="banner-title">{report.title}</h3>
-      {report.message && <p>{report.message}</p>}
+      <h3 id="banner-title">{translateMessage(locale, report.title)}</h3>
+      {report.message && <p>{translateMessage(locale, report.message)}</p>}
       {report.reward && (
         <>
           <p>{t('stage.rewardAdded')}</p>

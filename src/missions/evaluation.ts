@@ -1,11 +1,12 @@
 import { Farm } from '@/domain/farm';
+import type { Message } from '@/shared/message';
 import { farmConfigFromMap } from './mapParser';
 import type { Mission, ObjectiveContext } from './types';
 
 export interface MissionStatus {
   readonly objectivesMet: readonly boolean[];
   readonly complete: boolean;
-  readonly failure: string | null;
+  readonly failure: Message | null;
 }
 
 export function evaluateMission(mission: Mission, ctx: ObjectiveContext): MissionStatus {
