@@ -1,6 +1,8 @@
 import { CROP_IDS } from '@/domain/crops';
 import { useT } from '@/i18n/context';
 import { translateMessage } from '@/i18n/messages';
+import type { Locale } from '@/i18n/locales';
+import type { Message } from '@/shared/message';
 import { formatCount } from '../../format';
 import { useController, useGame } from '../../GameContext';
 import { CostChips, CropChip } from '../CropIcon';
@@ -48,6 +50,12 @@ export function Stage() {
   );
 }
 
+function withItems(message: Message, pending: readonly Message[] | undefined, locale: Locale): Message {
+  if (!pending || pending.length === 0) return message;
+  const items = pending.map((m) => translateMessage(locale, m)).join('; ');
+  return { ...message, params: { ...message.params, items } };
+}
+
 function ResultBanner() {
   const { report } = useGame();
   const controller = useController();
@@ -57,7 +65,7 @@ function ResultBanner() {
   return (
     <div className={`banner banner--${report.tone}`} role="dialog" aria-labelledby="banner-title">
       <h3 id="banner-title">{translateMessage(locale, report.title)}</h3>
-      {report.message && <p>{translateMessage(locale, report.message)}</p>}
+      {report.message && <p>{translateMessage(locale, withItems(report.message, report.pending, locale))}</p>}
       {report.reward && (
         <>
           <p>{t('stage.rewardAdded')}</p>

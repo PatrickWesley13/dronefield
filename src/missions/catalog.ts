@@ -36,7 +36,7 @@ export const MISSIONS: readonly Mission[] = [
       '',
       '// Keep going until you reach the beacon.',
     ]),
-    objectives: [reachBeacon('Reach the beacon at the east end')],
+    objectives: [reachBeacon('Reach the beacon at the east end', 'objective.beaconEast')],
     reward: { wheat: 5 },
   },
   {

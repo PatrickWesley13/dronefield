@@ -4,7 +4,7 @@ import type { InventorySnapshot } from '@/domain/inventory';
 import type { CropId, Cost } from '@/domain/crops';
 import type { Point } from '@/domain/geometry';
 import { formatValue, isScriptError, parseProgram, type ParsedProgram } from '@/interpreter';
-import { MISSIONS, createMissionFarm, evaluateMission, missionIndex, type MissionStatus } from '@/missions';
+import { MISSIONS, createMissionFarm, evaluateMission, missionIndex, type MissionStatus, type Objective } from '@/missions';
 import { SANDBOX_ID, createDefaultSave, type SaveData, type SaveRepository, type Settings } from '@/persistence';
 import {
   clearSandboxField,
@@ -39,6 +39,10 @@ export interface CompletedRun extends RunStats {
   readonly elapsedMs: number;
 }
 
+function objectiveMessage(objective: Objective): Message {
+  return msg(objective.key ?? 'objective.text', objective.description, objective.params);
+}
+
 export interface RunReport {
   readonly tone: 'success' | 'problem';
   readonly title: Message;
@@ -47,6 +51,7 @@ export interface RunReport {
   readonly reward: Cost | null;
   readonly unlockedSandbox: boolean;
   readonly nextLevelId: string | null;
+  readonly pending?: readonly Message[];
 }
 
 export interface HudState {
@@ -403,15 +408,15 @@ export class GameController {
         this.status = 'finished';
         if (level.kind === 'mission' && outcome.status) {
           this.missionStatus = outcome.status;
-          const missing = level.mission.objectives
-            .filter((_, i) => !outcome.status?.objectivesMet[i])
-            .map((o) => o.description.toLowerCase());
-          const items = missing.join('; ');
+          const pendingObjectives = level.mission.objectives.filter((_, i) => !outcome.status?.objectivesMet[i]);
+          const pendingMessages = pendingObjectives.map(objectiveMessage);
+          const items = pendingObjectives.map((o) => o.description.toLowerCase()).join('; ');
           this.log.add('warn', `Program finished, but the mission isn't done yet. Still to do: ${items}.`);
           this.report = {
             tone: 'problem',
             title: msg('report.notDone', 'Not quite'),
-            message: msg('report.stillToDo', `Your program ended before every objective was met. Still to do: ${items}.`, { items }),
+            message: msg('report.stillToDo', `Your program ended before every objective was met. Still to do: ${items}.`),
+            pending: pendingMessages,
             stats,
             reward: null,
             unlockedSandbox: false,
