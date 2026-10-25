@@ -1,3 +1,4 @@
+import { msg } from '../../shared/message';
 import { ScriptError } from '../errors';
 import { NativeFunction, isPrimitive, typeName, type NativeImpl, type Value } from '../values';
 
@@ -6,7 +7,9 @@ export const native = (name: string, impl: NativeImpl): NativeFunction => new Na
 /** A native function whose arguments must all be numbers. */
 export function numeric(name: string, fn: (...n: number[]) => number): NativeFunction {
   return native(name, (args) => {
-    for (const v of args) if (typeof v !== 'number') throw new ScriptError(`${name}() needs numbers. Got ${typeName(v)}.`);
+    for (const v of args)
+      if (typeof v !== 'number')
+        throw new ScriptError(msg('error.stdlib.numericNeedsNumbers', '{name}() needs numbers. Got {type}.', { name, type: typeName(v) }));
     return fn(...(args as number[]));
   });
 }
@@ -15,7 +18,12 @@ export function numeric(name: string, fn: (...n: number[]) => number): NativeFun
 export function primitiveOnly(name: string, fn: (args: Value[]) => Value): NativeFunction {
   return native(name, (args) => {
     if (args.length && !isPrimitive(args[0]))
-      throw new ScriptError(`${name}() works on numbers, strings and booleans. Got ${typeName(args[0])}.`);
+      throw new ScriptError(
+        msg('error.stdlib.primitiveOnly', '{name}() works on numbers, strings and booleans. Got {type}.', {
+          name,
+          type: typeName(args[0]),
+        }),
+      );
     return fn(args);
   });
 }

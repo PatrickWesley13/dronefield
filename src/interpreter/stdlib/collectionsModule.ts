@@ -1,3 +1,4 @@
+import { msg } from '../../shared/message';
 import { ScriptError } from '../errors';
 import { MAX_COLLECTION_SIZE } from '../limits';
 import { Deferred, Namespace, typeName, type ScriptObject, type Value } from '../values';
@@ -5,7 +6,7 @@ import { native } from './helpers';
 
 function expectObject(name: string, v: Value): ScriptObject | Value[] {
   if (v === null || v === undefined || typeof v !== 'object' || v instanceof Namespace)
-    throw new ScriptError(`${name}() needs an object. Got ${typeName(v)}.`);
+    throw new ScriptError(msg('error.stdlib.objectNeedsObject', '{name}() needs an object. Got {type}.', { name, type: typeName(v) }));
   return v as ScriptObject | Value[];
 }
 
@@ -36,9 +37,14 @@ export function createArrayNamespace(): Namespace {
       else if (source && typeof source === 'object' && !(source instanceof Namespace) && 'length' in source) {
         const len = (source as ScriptObject).length;
         if (typeof len !== 'number' || !Number.isInteger(len) || len < 0 || len > MAX_COLLECTION_SIZE)
-          throw new ScriptError('Array.from() needs a length from 0 to 100,000.');
+          throw new ScriptError(msg('error.stdlib.arrayFromLength', 'Array.from() needs a length from 0 to 100,000.'));
         items = new Array<Value>(len).fill(undefined);
-      } else throw new ScriptError(`Array.from() needs an array, a string or { length: n }. Got ${typeName(source)}.`);
+      } else
+        throw new ScriptError(
+          msg('error.stdlib.arrayFromSource', 'Array.from() needs an array, a string or { length: n }. Got {type}.', {
+            type: typeName(source),
+          }),
+        );
       if (mapper === undefined) return items;
       return new Deferred(
         (function* () {

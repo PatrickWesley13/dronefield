@@ -61,5 +61,5 @@ export class ConsoleLog {
   };
 
   /** Game warnings such as a blocked move. */
-  readonly notices: GameNotices = { warn: (text) => this.add('warn', text) };
+  readonly notices: GameNotices = { warn: (text) => (typeof text === 'string' ? this.add('warn', text) : this.addMessage('warn', text)) };
 }

@@ -1,4 +1,5 @@
 import { step } from '@/domain/geometry';
+import { msg } from '@/shared/message';
 import { describePosition, requireDirection } from '../arguments';
 import type { ApiFunction } from '../types';
 
@@ -19,7 +20,16 @@ export const MOVEMENT_API: readonly ApiFunction[] = [
       const result = farm.move(direction);
       if (result.ok) return true;
       notices.warn(
-        `move("${direction}") was blocked at ${describePosition(farm)} by ${result.reason === 'edge' ? 'the edge of the field' : result.reason}.`,
+        result.reason === 'edge'
+          ? msg('warn.api.moveBlockedEdge', 'move("{direction}") was blocked at {position} by the edge of the field.', {
+              direction,
+              position: describePosition(farm),
+            })
+          : msg('warn.api.moveBlocked', 'move("{direction}") was blocked at {position} by {reason}.', {
+              direction,
+              position: describePosition(farm),
+              reason: result.reason,
+            }),
       );
       return false;
     },

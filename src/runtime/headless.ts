@@ -29,7 +29,7 @@ export function runHeadless(source: string, farm: Farm, options: HeadlessOptions
     write: (level: ConsoleLevel, text: string) => output.push(level === 'log' ? text : `[${level}] ${text}`),
     clear: () => (output.length = 0),
   };
-  const notices: GameNotices = { warn: (text) => output.push(`! ${text}`) };
+  const notices: GameNotices = { warn: (text) => output.push(`! ${typeof text === 'string' ? text : text.fallback}`) };
   let program;
   try {
     program = parseProgram(source);

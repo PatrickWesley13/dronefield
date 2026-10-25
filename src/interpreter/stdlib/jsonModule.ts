@@ -1,3 +1,4 @@
+import { msg } from '../../shared/message';
 import { ScriptError } from '../errors';
 import { FORBIDDEN_KEYS } from '../properties';
 import { Namespace, NativeFunction, ScriptFunction, createObject, isPrimitive, type Value } from '../values';
@@ -9,7 +10,7 @@ type Json = null | boolean | number | string | Json[] | { [k: string]: Json };
 function toJson(v: Value, seen = new Set<object>()): Json | undefined {
   if (v instanceof ScriptFunction || v instanceof NativeFunction || v instanceof Namespace) return undefined;
   if (isPrimitive(v)) return v === undefined ? undefined : v;
-  if (seen.has(v)) throw new ScriptError('JSON.stringify() found a circular structure.');
+  if (seen.has(v)) throw new ScriptError(msg('error.stdlib.jsonCircular', 'JSON.stringify() found a circular structure.'));
   seen.add(v);
   let out: Json;
   if (Array.isArray(v)) out = v.map((x) => toJson(x, seen) ?? null);
@@ -43,12 +44,14 @@ export function createJson(): Namespace {
       return JSON.stringify(toJson(value), null, space);
     }),
     parse: native('JSON.parse', ([text]) => {
-      if (typeof text !== 'string') throw new ScriptError('JSON.parse() needs a string.');
-      if (text.length > 1_000_000) throw new ScriptError('That text is too long.');
+      if (typeof text !== 'string') throw new ScriptError(msg('error.stdlib.jsonParseNeedsString', 'JSON.parse() needs a string.'));
+      if (text.length > 1_000_000) throw new ScriptError(msg('error.stdlib.jsonTextTooLong', 'That text is too long.'));
       try {
         return fromJson(JSON.parse(text));
       } catch (e) {
-        throw new ScriptError(`JSON.parse() couldn't read that text: ${(e as Error).message}`);
+        throw new ScriptError(
+          msg('error.stdlib.jsonParseFailed', "JSON.parse() couldn't read that text: {reason}", { reason: (e as Error).message }),
+        );
       }
     }) satisfies NativeFunction,
   });

@@ -1,0 +1,20 @@
+export const apiEn = {
+  'error.api.needsArgs': '{name}() needs {count} arguments.',
+  'error.api.needsArg': '{name}() needs {count} argument.',
+  'error.api.takesNoArgs': '{name}() takes no arguments, but got {got}.',
+  'error.api.takesAtMostArgs': '{name}() takes at most {max} arguments, but got {got}.',
+  'error.api.takesAtMostArg': '{name}() takes at most {max} argument, but got {got}.',
+  'error.api.needsDirectionLowercase':
+    '{name}() needs a direction: "north", "south", "east" or "west". Got {got}. Directions are lowercase: "{lower}".',
+  'error.api.needsDirection': '{name}() needs a direction: "north", "south", "east" or "west". Got {got}.',
+  'error.api.needsCrop': '{name}() needs a crop name like "wheat". Got {got}.',
+  'error.api.cropLocked': "{label} seeds aren't unlocked yet.",
+  'error.api.waitInvalidTicks': 'wait() takes a whole number of ticks from 1 to 1000. Got {got}.',
+  'warn.api.plantFailed': 'plant("{crop}") did nothing at {position}: {reason}.',
+  'warn.api.harvestEmpty': 'harvest() found nothing at {position}.',
+  'warn.api.harvestUnripe': 'harvest() destroyed an unripe {crop} at {position}. Check getCropGrowth() first.',
+  'warn.api.inventoryFull': 'Inventory full: {lost} {crop} lost. Cargo holds {capacity} of each crop.',
+  'warn.api.waterFailed': 'water() did nothing at {position}: {reason}.',
+  'warn.api.moveBlockedEdge': 'move("{direction}") was blocked at {position} by the edge of the field.',
+  'warn.api.moveBlocked': 'move("{direction}") was blocked at {position} by {reason}.',
+} as const;
