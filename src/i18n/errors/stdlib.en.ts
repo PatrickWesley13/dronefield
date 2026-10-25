@@ -1,0 +1,17 @@
+export const stdlibEn = {
+  'error.stdlib.jsonCircular': 'JSON.stringify() found a circular structure.',
+  'error.stdlib.jsonParseNeedsString': 'JSON.parse() needs a string.',
+  'error.stdlib.jsonTextTooLong': 'That text is too long.',
+  'error.stdlib.jsonParseFailed': "JSON.parse() couldn't read that text: {reason}",
+  'error.stdlib.objectNeedsObject': '{name}() needs an object. Got {type}.',
+  'error.stdlib.arrayFromLength': 'Array.from() needs a length from 0 to 100,000.',
+  'error.stdlib.arrayFromSource': 'Array.from() needs an array, a string or { length: n }. Got {type}.',
+  'error.stdlib.numericNeedsNumbers': '{name}() needs numbers. Got {type}.',
+  'error.stdlib.primitiveOnly': '{name}() works on numbers, strings and booleans. Got {type}.',
+  'error.method.callbackNeedsFunction': '{name}() needs a function, like list.{name}(x => …).',
+  'error.method.arrayMaxItems': 'Arrays can hold at most {max} items.',
+  'error.method.sortCompareNotNumber': 'The sort() compare function must return a number.',
+  'error.method.reduceEmpty': 'reduce() of an empty array needs a starting value.',
+  'error.method.stringTooLong': 'That string would be too long.',
+  'error.method.repeatNegative': 'repeat() needs a count of 0 or more.',
+} as const;

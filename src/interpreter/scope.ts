@@ -1,4 +1,5 @@
 import { ScriptError } from './errors';
+import { msg } from '@/shared/message';
 import type { Value } from './values';
 
 export class Scope {
@@ -13,8 +14,11 @@ export class Scope {
 
   declare(name: string, value: Value, isConst: boolean): void {
     if (this.vars.has(name)) {
-      if (this.builtins.has(name)) throw new ScriptError(`${name} is a built-in name and can't be redeclared. Pick another name.`);
-      throw new ScriptError(`'${name}' is already declared in this block.`);
+      if (this.builtins.has(name))
+        throw new ScriptError(
+          msg('error.interp.builtinRedeclared', `${name} is a built-in name and can't be redeclared. Pick another name.`, { name }),
+        );
+      throw new ScriptError(msg('error.interp.alreadyDeclared', `'${name}' is already declared in this block.`, { name }));
     }
     this.vars.set(name, value);
     if (isConst) this.constants.add(name);
@@ -30,8 +34,12 @@ export class Scope {
   }
 
   set(name: string, value: Value): void {
-    if (this.builtins.has(name)) throw new ScriptError(`${name} is built in and can't be reassigned.`);
-    if (this.constants.has(name)) throw new ScriptError(`'${name}' is a const and can't change. Declare it with let instead.`);
+    if (this.builtins.has(name))
+      throw new ScriptError(msg('error.interp.builtinReassigned', `${name} is built in and can't be reassigned.`, { name }));
+    if (this.constants.has(name))
+      throw new ScriptError(
+        msg('error.interp.constReassigned', `'${name}' is a const and can't change. Declare it with let instead.`, { name }),
+      );
     this.vars.set(name, value);
   }
 }

@@ -1,3 +1,4 @@
+import { msg } from '../../shared/message';
 import { ScriptError } from '../errors';
 import { toDisplayString } from '../format';
 import { MAX_COLLECTION_SIZE } from '../limits';
@@ -8,11 +9,13 @@ import type { Method, MethodContext } from './types';
 
 function callbackArg(name: string, args: Value[]): Value {
   const f = args[0];
-  if (!isCallable(f)) throw new ScriptError(`${name}() needs a function, like list.${name}(x => …).`);
+  if (!isCallable(f))
+    throw new ScriptError(msg('error.method.callbackNeedsFunction', '{name}() needs a function, like list.{name}(x => …).', { name }));
   return f;
 }
 function ensureRoom(arr: Value[], extra: number): void {
-  if (arr.length + extra > MAX_COLLECTION_SIZE) throw new ScriptError(`Arrays can hold at most ${MAX_COLLECTION_SIZE} items.`);
+  if (arr.length + extra > MAX_COLLECTION_SIZE)
+    throw new ScriptError(msg('error.method.arrayMaxItems', 'Arrays can hold at most {max} items.', { max: MAX_COLLECTION_SIZE }));
 }
 function optionalIndex(name: string, v: Value): number | undefined {
   return v === undefined ? undefined : expectNumber(name, v);
@@ -21,7 +24,8 @@ function optionalIndex(name: string, v: Value): number | undefined {
 function* compare(ctx: MethodContext, fn: Value | null, a: Value, b: Value): Execution<number> {
   if (fn) {
     const r = yield* ctx.call(fn, [a, b]);
-    if (typeof r !== 'number') throw new ScriptError('The sort() compare function must return a number.');
+    if (typeof r !== 'number')
+      throw new ScriptError(msg('error.method.sortCompareNotNumber', 'The sort() compare function must return a number.'));
     return r;
   }
   const x = toDisplayString(a),
@@ -123,7 +127,7 @@ export const ARRAY_METHODS: Readonly<Record<string, Method<Value[]>>> = {
     let acc: Value;
     if (args.length > 1) acc = args[1];
     else {
-      if (!a.length) throw new ScriptError('reduce() of an empty array needs a starting value.');
+      if (!a.length) throw new ScriptError(msg('error.method.reduceEmpty', 'reduce() of an empty array needs a starting value.'));
       acc = a[0];
       i = 1;
     }

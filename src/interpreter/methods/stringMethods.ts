@@ -1,3 +1,4 @@
+import { msg } from '../../shared/message';
 import { ScriptError } from '../errors';
 import { toDisplayString } from '../format';
 import { MAX_COLLECTION_SIZE } from '../limits';
@@ -8,7 +9,7 @@ import type { Method } from './types';
 const str = (args: Value[], i: number): string => toDisplayString(args[i]);
 const optional = (name: string, v: Value): number | undefined => (v === undefined ? undefined : expectNumber(name, v));
 function bounded(s: string): string {
-  if (s.length > MAX_COLLECTION_SIZE) throw new ScriptError('That string would be too long.');
+  if (s.length > MAX_COLLECTION_SIZE) throw new ScriptError(msg('error.method.stringTooLong', 'That string would be too long.'));
   return s;
 }
 
@@ -52,7 +53,7 @@ export const STRING_METHODS: Readonly<Record<string, Method<string>>> = {
   },
   *repeat(s, a) {
     const n = expectNumber('repeat', a[0]);
-    if (n < 0) throw new ScriptError('repeat() needs a count of 0 or more.');
+    if (n < 0) throw new ScriptError(msg('error.method.repeatNegative', 'repeat() needs a count of 0 or more.'));
     return bounded(s.repeat(Math.min(n, MAX_COLLECTION_SIZE)));
   },
   *padStart(s, a) {

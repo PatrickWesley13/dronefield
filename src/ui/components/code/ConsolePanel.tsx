@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import type { LogKind } from '@/app/consoleLog';
 import { useT } from '@/i18n/context';
+import { translateMessage } from '@/i18n/messages';
 import { useConsoleEntries, useController } from '../../GameContext';
 
 const KIND_CLASS: Readonly<Record<LogKind, string>> = {
@@ -16,7 +17,7 @@ const KIND_CLASS: Readonly<Record<LogKind, string>> = {
 export function ConsolePanel({ onGotoLine }: { onGotoLine: (line: number) => void }) {
   const entries = useConsoleEntries();
   const { log } = useController();
-  const { t } = useT();
+  const { t, locale } = useT();
   const list = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const el = list.current;
@@ -42,7 +43,7 @@ export function ConsolePanel({ onGotoLine }: { onGotoLine: (line: number) => voi
                 :{' '}
               </>
             )}
-            {e.text}
+            {e.message ? translateMessage(locale, e.message) : e.text}
             {e.repeat > 1 && <span className="console__repeat"> ×{e.repeat.toLocaleString('en-US')}</span>}
           </div>
         ))}

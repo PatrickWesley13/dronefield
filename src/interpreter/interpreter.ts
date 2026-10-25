@@ -1,5 +1,6 @@
 import type * as AST from 'acorn';
 import { ScriptError } from './errors';
+import { msg } from '@/shared/message';
 import { toDisplayString } from './format';
 import { UNDEFINED_NAME_HINTS, toCamelCase } from './hints';
 import { MAX_CALL_DEPTH, MAX_COLLECTION_SIZE, type ExecutionLimits } from './limits';
@@ -89,7 +90,11 @@ export class Interpreter {
     const { maxInstructions, idleLimit } = this.options.limits;
     if (++this.instructions > maxInstructions) {
       throw new ScriptError(
-        `Instruction limit reached (${maxInstructions.toLocaleString('en-US')} steps). Your program may be stuck in a loop, or it needs a more efficient approach.`,
+        msg(
+          'error.interp.instructionLimit',
+          `Instruction limit reached (${maxInstructions.toLocaleString('en-US')} steps). Your program may be stuck in a loop, or it needs a more efficient approach.`,
+          { steps: maxInstructions.toLocaleString('en-US') },
+        ),
         lineOf(node),
       );
     }
@@ -99,7 +104,11 @@ export class Interpreter {
       this.idleSteps = 0;
     } else if (++this.idleSteps > idleLimit) {
       throw new ScriptError(
-        `Your program ran ${idleLimit.toLocaleString('en-US')} steps without the drone doing anything. It's probably a loop that never ends. If you're waiting for a crop to grow, call wait() inside the loop.`,
+        msg(
+          'error.interp.idleLimit',
+          `Your program ran ${idleLimit.toLocaleString('en-US')} steps without the drone doing anything. It's probably a loop that never ends. If you're waiting for a crop to grow, call wait() inside the loop.`,
+          { steps: idleLimit.toLocaleString('en-US') },
+        ),
         lineOf(node),
       );
     }
@@ -146,14 +155,21 @@ export class Interpreter {
     if (name === 'NaN') return NaN;
     if (name === 'Infinity') return Infinity;
     const locked = this.options.lockedNames?.get(name);
-    if (locked) throw new ScriptError(`${name}() is locked. ${locked}`, lineOf(node));
+    if (locked)
+      throw new ScriptError(msg('error.interp.nameLocked', `${name}() is locked. ${locked}`, { name, reason: locked }), lineOf(node));
     const hint = UNDEFINED_NAME_HINTS[name];
-    if (hint) throw new ScriptError(`'${name}' is not defined. ${hint}`, lineOf(node));
+    if (hint) throw new ScriptError(msg('error.interp.notDefinedHint', `'${name}' is not defined. ${hint}`, { name, hint }), lineOf(node));
     const camel = toCamelCase(name);
     if (camel !== name && (this.options.globals.has(camel) || this.options.lockedNames?.has(camel))) {
-      throw new ScriptError(`'${name}' is not defined. Did you mean ${camel}()?`, lineOf(node));
+      throw new ScriptError(
+        msg('error.interp.notDefinedDidYouMean', `'${name}' is not defined. Did you mean ${camel}()?`, { name, suggestion: camel }),
+        lineOf(node),
+      );
     }
-    throw new ScriptError(`'${name}' is not defined. Check the spelling, or declare it first with let ${name} = …`, lineOf(node));
+    throw new ScriptError(
+      msg('error.interp.notDefined', `'${name}' is not defined. Check the spelling, or declare it first with let ${name} = …`, { name }),
+      lineOf(node),
+    );
   }
 
   private *callValue(fn: Value, args: Value[], node: AST.Node | null, name: string): Execution<Value> {
@@ -164,16 +180,26 @@ export class Interpreter {
       return result instanceof Deferred ? yield* result.execution : result;
     }
     if (callee instanceof ScriptFunction) return yield* this.callScriptFunction(callee, args, node);
-    throw new ScriptError(`${name || 'That value'} is not a function (it's ${typeName(fn)}).`, lineOf(node));
+    throw new ScriptError(
+      name
+        ? msg('error.interp.notAFunction', `${name} is not a function (it's ${typeName(fn)}).`, { name, type: typeName(fn) })
+        : msg('error.interp.notAFunctionAnonymous', `That value is not a function (it's ${typeName(fn)}).`, { type: typeName(fn) }),
+      lineOf(node),
+    );
   }
 
   private *callScriptFunction(fn: ScriptFunction, args: Value[], node: AST.Node | null): Execution<Value> {
     if (this.depth >= MAX_CALL_DEPTH)
       throw new ScriptError(
-        `Too many nested calls (over ${MAX_CALL_DEPTH}). Check that your recursive function has a way to stop.`,
+        msg(
+          'error.interp.tooManyNestedCalls',
+          `Too many nested calls (over ${MAX_CALL_DEPTH}). Check that your recursive function has a way to stop.`,
+          { max: MAX_CALL_DEPTH },
+        ),
         lineOf(node),
       );
-    if (++this.instructions > this.options.limits.maxInstructions) throw new ScriptError('Instruction limit reached.', lineOf(node));
+    if (++this.instructions > this.options.limits.maxInstructions)
+      throw new ScriptError(msg('error.interp.instructionLimitPlain', 'Instruction limit reached.'), lineOf(node));
     const scope = new Scope(fn.closure);
     for (let i = 0; i < fn.params.length; i++) {
       const p = fn.params[i] as AST.Pattern;
@@ -201,9 +227,19 @@ export class Interpreter {
       return yield* this.callValue(fn, args, node, target instanceof Namespace ? `${target.name}.${k}` : String(k));
     }
     const table = Array.isArray(target) ? ARRAY_METHODS : typeof target === 'string' ? STRING_METHODS : null;
-    if (!table) throw new ScriptError(`Can't call ${k}() on ${typeName(target)}.`, lineOf(node));
+    if (!table)
+      throw new ScriptError(
+        msg('error.interp.cantCallMethod', `Can't call ${k}() on ${typeName(target)}.`, { method: k, type: typeName(target) }),
+        lineOf(node),
+      );
     const method = Object.prototype.hasOwnProperty.call(table, k) ? table[k] : undefined;
-    if (!method) throw new ScriptError(`${Array.isArray(target) ? 'Arrays' : 'Strings'} don't have a ${k}() method.`, lineOf(node));
+    if (!method)
+      throw new ScriptError(
+        Array.isArray(target)
+          ? msg('error.interp.arrayNoMethod', `Arrays don't have a ${k}() method.`, { method: k })
+          : msg('error.interp.stringNoMethod', `Strings don't have a ${k}() method.`, { method: k }),
+        lineOf(node),
+      );
     return yield* this.located(
       node,
       (method as (t: Value, a: Value[], c: MethodContext) => Execution<Value>)(target, args, this.methodContext),
@@ -213,7 +249,8 @@ export class Interpreter {
   // ------------------------------------------------------------------ patterns
   private declareLeaf(scope: Scope, isConst: boolean): Leaf {
     return (target, value) => {
-      if (target.type !== 'Identifier') throw new ScriptError('Only names can be declared.', lineOf(target));
+      if (target.type !== 'Identifier')
+        throw new ScriptError(msg('error.interp.onlyNamesDeclared', 'Only names can be declared.'), lineOf(target));
       if (value instanceof ScriptFunction && !value.name) value.name = target.name;
       this.withLine(target, () => scope.declare(target.name, value, isConst));
       return immediate(undefined);
@@ -239,7 +276,11 @@ export class Interpreter {
       }
       case 'ArrayPattern': {
         const items = Array.isArray(value) ? value : typeof value === 'string' ? Array.from(value) : null;
-        if (!items) throw new ScriptError(`${typeName(value)} can't be unpacked like an array.`, lineOf(pattern));
+        if (!items)
+          throw new ScriptError(
+            msg('error.interp.cantUnpackArray', `${typeName(value)} can't be unpacked like an array.`, { type: typeName(value) }),
+            lineOf(pattern),
+          );
         for (let i = 0; i < pattern.elements.length; i++) {
           const el = pattern.elements[i];
           if (!el) continue;
@@ -252,7 +293,11 @@ export class Interpreter {
         return;
       }
       case 'ObjectPattern': {
-        if (value === null || value === undefined) throw new ScriptError(`Cannot destructure ${typeName(value)}.`, lineOf(pattern));
+        if (value === null || value === undefined)
+          throw new ScriptError(
+            msg('error.interp.cannotDestructure', `Cannot destructure ${typeName(value)}.`, { type: typeName(value) }),
+            lineOf(pattern),
+          );
         const used = new Set<string>();
         for (const prop of pattern.properties) {
           if (prop.type === 'RestElement') {
@@ -273,14 +318,14 @@ export class Interpreter {
         return;
       }
       case 'RestElement':
-        throw new ScriptError('A rest element (...) must come last.', lineOf(pattern));
+        throw new ScriptError(msg('error.interp.restMustBeLast', 'A rest element (...) must come last.'), lineOf(pattern));
     }
   }
 
   private staticKey(key: AST.Expression | AST.PrivateIdentifier): string {
     if (key.type === 'Identifier') return key.name;
     if (key.type === 'Literal') return String(key.value);
-    throw new ScriptError('Unsupported property name.', lineOf(key));
+    throw new ScriptError(msg('error.interp.unsupportedPropertyName', 'Unsupported property name.'), lineOf(key));
   }
 
   private *assign(target: AST.Pattern | AST.Expression, value: Value, scope: Scope, node: AST.Node): Execution<void> {
@@ -288,7 +333,13 @@ export class Interpreter {
       return yield* this.destructure(target, value, scope, this.assignLeaf(scope, node));
     if (target.type === 'Identifier') {
       const owner = scope.find(target.name);
-      if (!owner) throw new ScriptError(`'${target.name}' hasn't been declared. Use let ${target.name} = … the first time.`, lineOf(node));
+      if (!owner)
+        throw new ScriptError(
+          msg('error.interp.undeclared', `'${target.name}' hasn't been declared. Use let ${target.name} = … the first time.`, {
+            name: target.name,
+          }),
+          lineOf(node),
+        );
       return this.withLine(node, () => owner.set(target.name, value));
     }
     if (target.type === 'MemberExpression') {
@@ -296,7 +347,10 @@ export class Interpreter {
       const key = yield* this.memberKey(target, scope);
       return this.withLine(node, () => setProperty(obj, key, value));
     }
-    throw new ScriptError('You can only assign to variables, list items or object properties.', lineOf(node));
+    throw new ScriptError(
+      msg('error.interp.invalidAssignTarget', 'You can only assign to variables, list items or object properties.'),
+      lineOf(node),
+    );
   }
 
   private *read(target: AST.Pattern | AST.Expression, scope: Scope): Execution<Value> {
@@ -306,7 +360,7 @@ export class Interpreter {
       const key = yield* this.memberKey(target, scope);
       return this.withLine(target, () => getProperty(obj, key));
     }
-    throw new ScriptError('That can’t be updated.', lineOf(target));
+    throw new ScriptError(msg('error.interp.cantUpdate', 'That can’t be updated.'), lineOf(target));
   }
 
   private *memberKey(node: AST.MemberExpression, scope: Scope): Execution<Value> {
@@ -317,14 +371,20 @@ export class Interpreter {
   private *evaluateList(list: ReadonlyArray<AST.Expression | AST.SpreadElement | null>, scope: Scope): Execution<Value[]> {
     const out: Value[] = [];
     for (const item of list) {
-      if (item === null) throw new ScriptError("Empty slots in arrays aren't supported.");
+      if (item === null) throw new ScriptError(msg('error.interp.emptyArraySlot', "Empty slots in arrays aren't supported."));
       if (item.type === 'SpreadElement') {
         const v = yield* this.evaluate(item.argument, scope);
         const items = Array.isArray(v) ? v : typeof v === 'string' ? Array.from(v) : null;
-        if (!items) throw new ScriptError(`Only arrays and strings can be spread with ..., not ${typeName(v)}.`, lineOf(item));
+        if (!items)
+          throw new ScriptError(
+            msg('error.interp.spreadNotIterable', `Only arrays and strings can be spread with ..., not ${typeName(v)}.`, {
+              type: typeName(v),
+            }),
+            lineOf(item),
+          );
         out.push(...items);
       } else out.push(yield* this.evaluate(item, scope));
-      if (out.length > MAX_COLLECTION_SIZE) throw new ScriptError('Too many items.', lineOf(item));
+      if (out.length > MAX_COLLECTION_SIZE) throw new ScriptError(msg('error.interp.tooManyItems', 'Too many items.'), lineOf(item));
     }
     return out;
   }
@@ -340,7 +400,11 @@ export class Interpreter {
 
   private *execute(node: AST.Statement | AST.Declaration | AST.ModuleDeclaration, scope: Scope): Execution<Completion> {
     const handler = this.statements[node.type as keyof typeof this.statements] as StatementHandler<AST.AnyNode['type']> | undefined;
-    if (!handler) throw new ScriptError(`${node.type} isn't supported in drone scripts.`, lineOf(node));
+    if (!handler)
+      throw new ScriptError(
+        msg('error.interp.unsupportedSyntax', `${node.type} isn't supported in drone scripts.`, { nodeType: node.type }),
+        lineOf(node),
+      );
     return yield* handler(node as never, scope);
   }
 
@@ -380,7 +444,8 @@ export class Interpreter {
   private *execVariableDeclaration(node: NodeOf<'VariableDeclaration'>, scope: Scope): Execution<Completion> {
     yield* this.tick(node);
     for (const d of node.declarations) {
-      if (node.kind === 'const' && !d.init) throw new ScriptError('const declarations need a value, like const total = 5.', lineOf(d));
+      if (node.kind === 'const' && !d.init)
+        throw new ScriptError(msg('error.interp.constNeedsValue', 'const declarations need a value, like const total = 5.'), lineOf(d));
       const value = d.init ? yield* this.evaluate(d.init, scope) : undefined;
       yield* this.destructure(d.id, value, scope, this.declareLeaf(scope, node.kind === 'const'));
     }
@@ -441,7 +506,11 @@ export class Interpreter {
     const items = Array.isArray(source) ? source : typeof source === 'string' ? Array.from(source) : null;
     if (!items)
       throw new ScriptError(
-        `for…of needs an array or a string, not ${typeName(source)}. To loop over an object, use Object.entries(obj).`,
+        msg(
+          'error.interp.forOfNotIterable',
+          `for…of needs an array or a string, not ${typeName(source)}. To loop over an object, use Object.entries(obj).`,
+          { type: typeName(source) },
+        ),
         lineOf(node),
       );
     return yield* this.iterate(node, items, scope);
@@ -451,7 +520,11 @@ export class Interpreter {
     yield* this.tick(node);
     const source = yield* this.evaluate(node.right, scope);
     const keys = isPlainObject(source) ? Object.keys(source) : Array.isArray(source) ? source.map((_, i) => String(i)) : null;
-    if (!keys) throw new ScriptError(`for…in needs an object, not ${typeName(source)}.`, lineOf(node));
+    if (!keys)
+      throw new ScriptError(
+        msg('error.interp.forInNotObject', `for…in needs an object, not ${typeName(source)}.`, { type: typeName(source) }),
+        lineOf(node),
+      );
     return yield* this.iterate(node, keys, scope);
   }
 
@@ -516,7 +589,11 @@ export class Interpreter {
   // ------------------------------------------------------------------ expressions
   private *evaluate(node: AST.Expression | AST.PrivateIdentifier | AST.Super, scope: Scope): Execution<Value> {
     const handler = this.expressions[node.type as keyof typeof this.expressions] as ExpressionHandler<AST.AnyNode['type']> | undefined;
-    if (!handler) throw new ScriptError(`${node.type} isn't supported in drone scripts.`, lineOf(node));
+    if (!handler)
+      throw new ScriptError(
+        msg('error.interp.unsupportedSyntax', `${node.type} isn't supported in drone scripts.`, { nodeType: node.type }),
+        lineOf(node),
+      );
     return yield* handler(node as never, scope);
   }
 
@@ -562,7 +639,11 @@ export class Interpreter {
         const v = yield* this.evaluate(p.argument, scope);
         if (Array.isArray(v)) v.forEach((x, i) => (obj[String(i)] = x));
         else if (isPlainObject(v)) for (const k of Object.keys(v)) obj[k] = v[k];
-        else if (v !== null && v !== undefined) throw new ScriptError(`Can't spread ${typeName(v)} into an object.`, lineOf(p));
+        else if (v !== null && v !== undefined)
+          throw new ScriptError(
+            msg('error.interp.cantSpreadIntoObject', `Can't spread ${typeName(v)} into an object.`, { type: typeName(v) }),
+            lineOf(p),
+          );
         continue;
       }
       const key = p.computed ? yield* this.evaluate(p.key, scope) : this.staticKey(p.key);
@@ -611,7 +692,11 @@ export class Interpreter {
     if (node.operator === '=') value = yield* this.evaluate(node.right, scope);
     else {
       const op = COMPOUND_ASSIGNMENT[node.operator];
-      if (!op) throw new ScriptError(`The ${node.operator} operator isn't supported.`, lineOf(node));
+      if (!op)
+        throw new ScriptError(
+          msg('error.interp.operatorUnsupported', `The ${node.operator} operator isn't supported.`, { op: node.operator }),
+          lineOf(node),
+        );
       const current = yield* this.read(node.left, scope);
       const rhs = yield* this.evaluate(node.right, scope);
       value = this.withLine(node, () => applyBinary(op, current, rhs));
@@ -635,7 +720,13 @@ export class Interpreter {
       if (member.optional && (target === null || target === undefined)) throw SHORT_CIRCUIT;
       const key = yield* this.memberKey(member, scope);
       if (target === null || target === undefined)
-        throw new ScriptError(`Cannot read properties of ${typeName(target)} (reading '${String(key)}').`, lineOf(node));
+        throw new ScriptError(
+          msg('error.interp.cannotReadProperty', `Cannot read properties of ${typeName(target)} (reading '${String(key)}').`, {
+            type: typeName(target),
+            key: String(key),
+          }),
+          lineOf(node),
+        );
       if (node.optional && isPlainObject(target)) {
         const fn = this.withLine(node, () => getProperty(target, key));
         if (fn === null || fn === undefined) throw SHORT_CIRCUIT;
@@ -664,7 +755,11 @@ export class Interpreter {
     const key = yield* this.memberKey(node, scope);
     if ((target === null || target === undefined) && node.object.type === 'CallExpression') {
       throw new ScriptError(
-        `Cannot read properties of ${typeName(target)} (reading '${String(key)}'). That call returned ${typeName(target)}.`,
+        msg(
+          'error.interp.cannotReadPropertyAfterCall',
+          `Cannot read properties of ${typeName(target)} (reading '${String(key)}'). That call returned ${typeName(target)}.`,
+          { type: typeName(target), key: String(key) },
+        ),
         lineOf(node),
       );
     }

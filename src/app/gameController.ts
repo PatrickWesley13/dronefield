@@ -471,7 +471,7 @@ export class GameController {
 
   private reportError(e: unknown): void {
     if (isScriptError(e)) {
-      this.log.add('error', e.message, e.line);
+      this.log.addMessage('error', e.message_, e.line);
       this.errorLine = e.line;
     } else {
       this.log.add('error', `Something went wrong inside the game: ${e instanceof Error ? e.message : String(e)}`);

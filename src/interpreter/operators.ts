@@ -1,4 +1,5 @@
 import { ScriptError } from './errors';
+import { msg } from '@/shared/message';
 import { toDisplayString } from './format';
 import { isPrimitive, isTruthy, typeName, type Value } from './values';
 
@@ -18,13 +19,22 @@ export function looseEquals(a: Value, b: Value): boolean {
 export function applyBinary(op: string, l: Value, r: Value): Value {
   if (op === '+') {
     if (typeof l === 'string' || typeof r === 'string') return toDisplayString(l) + toDisplayString(r);
-    if (typeof l !== 'number' || typeof r !== 'number') throw new ScriptError(`Can't add ${typeName(l)} and ${typeName(r)}.`);
+    if (typeof l !== 'number' || typeof r !== 'number')
+      throw new ScriptError(
+        msg('error.interp.cantAdd', `Can't add ${typeName(l)} and ${typeName(r)}.`, { left: typeName(l), right: typeName(r) }),
+      );
     return l + r;
   }
   if (ARITHMETIC.has(op)) {
     if (typeof l !== 'number' || typeof r !== 'number')
-      throw new ScriptError(`Can't use ${op} with ${typeName(l)} and ${typeName(r)}; both sides need to be numbers.`);
-    if ((op === '/' || op === '%') && r === 0) throw new ScriptError('Division by zero.');
+      throw new ScriptError(
+        msg(
+          'error.interp.arithmeticNeedsNumbers',
+          `Can't use ${op} with ${typeName(l)} and ${typeName(r)}; both sides need to be numbers.`,
+          { op, left: typeName(l), right: typeName(r) },
+        ),
+      );
+    if ((op === '/' || op === '%') && r === 0) throw new ScriptError(msg('error.interp.divisionByZero', 'Division by zero.'));
     switch (op) {
       case '-':
         return l - r;
@@ -40,7 +50,14 @@ export function applyBinary(op: string, l: Value, r: Value): Value {
   }
   if (COMPARISON.has(op)) {
     const comparable = (typeof l === 'number' && typeof r === 'number') || (typeof l === 'string' && typeof r === 'string');
-    if (!comparable) throw new ScriptError(`Can't compare ${typeName(l)} with ${typeName(r)} using ${op}.`);
+    if (!comparable)
+      throw new ScriptError(
+        msg('error.interp.cantCompare', `Can't compare ${typeName(l)} with ${typeName(r)} using ${op}.`, {
+          left: typeName(l),
+          right: typeName(r),
+          op,
+        }),
+      );
     const a = l as number | string,
       b = r as number | string;
     switch (op) {
@@ -64,7 +81,7 @@ export function applyBinary(op: string, l: Value, r: Value): Value {
     case '!=':
       return !looseEquals(l, r);
   }
-  throw new ScriptError(`The ${op} operator isn't supported.`);
+  throw new ScriptError(msg('error.interp.operatorUnsupported', `The ${op} operator isn't supported.`, { op }));
 }
 
 export function applyUnary(op: string, v: Value): Value {
@@ -78,11 +95,14 @@ export function applyUnary(op: string, v: Value): Value {
     case 'typeof':
       return typeName(v) === 'array' || typeName(v) === 'null' ? 'object' : typeName(v);
   }
-  throw new ScriptError(`The ${op} operator isn't supported.`);
+  throw new ScriptError(msg('error.interp.operatorUnsupported', `The ${op} operator isn't supported.`, { op }));
 }
 
 export function expectNumber(op: string, v: Value): number {
-  if (typeof v !== 'number') throw new ScriptError(`Can't use ${op} with ${typeName(v)}; it needs a number.`);
+  if (typeof v !== 'number')
+    throw new ScriptError(
+      msg('error.interp.unaryNeedsNumber', `Can't use ${op} with ${typeName(v)}; it needs a number.`, { op, type: typeName(v) }),
+    );
   return v;
 }
 

@@ -1,9 +1,10 @@
 import type { Farm } from '@/domain/farm';
 import type { Value } from '@/interpreter';
+import type { Message } from '@/shared/message';
 
 /** Game-side messages that aren't the player's own console output. */
 export interface GameNotices {
-  warn(text: string): void;
+  warn(text: string | Message): void;
 }
 
 export interface ApiContext {
