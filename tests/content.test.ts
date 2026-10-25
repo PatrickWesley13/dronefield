@@ -41,4 +41,11 @@ describe('game content translations', () => {
     expect(translateMessage('pt-BR', stillToDo)).toContain('Collect 3 wheat');
     expect(translateMessage('pt-BR', stillToDo)).toContain('Pendente');
   });
+
+  it('translates a pending objective key instead of leaving English text', () => {
+    expect(translateKey('pt-BR', 'objective.beaconEast', {}, 'Reach the beacon at the east end')).toBe(
+      'Chegue ao farol na extremidade leste',
+    );
+    expect(translateKey('en', 'objective.beaconEast', {}, 'x')).toBe('Reach the beacon at the east end');
+  });
 });
