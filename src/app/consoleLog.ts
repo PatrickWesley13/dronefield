@@ -1,6 +1,7 @@
 import type { GameNotices } from '@/api';
 import type { ConsoleLevel, ScriptConsole } from '@/interpreter';
 import { Emitter } from '@/shared/emitter';
+import type { Message } from '@/shared/message';
 
 export type LogKind = 'out' | 'info' | 'warn' | 'error' | 'success' | 'hint' | 'summary';
 
@@ -8,6 +9,8 @@ export interface LogEntry {
   readonly id: number;
   readonly kind: LogKind;
   readonly text: string;
+  /** Translatable form of a game message. When set, the UI shows it instead of `text`. */
+  readonly message: Message | null;
   readonly line: number | null;
   /** Consecutive identical messages are collapsed into one entry. */
   readonly repeat: number;
@@ -27,17 +30,27 @@ export class ConsoleLog {
   }
 
   add(kind: LogKind, text: string, line: number | null = null): void {
-    const last = this.items.at(-1);
-    if (last && last.kind === kind && last.text === text && last.line === line) {
-      this.items = [...this.items.slice(0, -1), { ...last, repeat: last.repeat + 1 }];
-    } else {
-      this.items = [...this.items.slice(-(MAX_ENTRIES - 1)), { id: this.nextId++, kind, text, line, repeat: 1 }];
-    }
-    this.changes.emit();
+    this.push(kind, text, null, line);
+  }
+
+  /** Adds a game message the UI translates. `message.fallback` is the English text. */
+  addMessage(kind: LogKind, message: Message, line: number | null = null): void {
+    this.push(kind, message.fallback, message, line);
   }
 
   clear(): void {
     this.items = [];
+    this.changes.emit();
+  }
+
+  private push(kind: LogKind, text: string, message: Message | null, line: number | null): void {
+    const last = this.items.at(-1);
+    const sameMessage = last?.message?.key === message?.key;
+    if (last && last.kind === kind && last.text === text && last.line === line && sameMessage) {
+      this.items = [...this.items.slice(0, -1), { ...last, repeat: last.repeat + 1 }];
+    } else {
+      this.items = [...this.items.slice(-(MAX_ENTRIES - 1)), { id: this.nextId++, kind, text, message, line, repeat: 1 }];
+    }
     this.changes.emit();
   }
 

@@ -29,6 +29,7 @@ import {
   type RunStats,
 } from '@/runtime';
 import { Emitter } from '@/shared/emitter';
+import { msg, type Message } from '@/shared/message';
 import { ConsoleLog } from './consoleLog';
 import { resolveLevel, starterCode, type Level } from './levels';
 
@@ -71,7 +72,7 @@ export interface GameSnapshot {
   readonly lastRun: CompletedRun | null;
   readonly report: RunReport | null;
   readonly hud: HudState;
-  readonly toast: { readonly id: number; readonly text: string } | null;
+  readonly toast: { readonly id: number; readonly message: Message } | null;
 }
 
 export interface GameControllerDeps {
@@ -127,7 +128,7 @@ export class GameController {
     this.save = loaded.save;
     this.level = this.initialLevel();
     this.enterLevel(this.level);
-    if (loaded.notice) this.showToast(loaded.notice);
+    if (loaded.notice) this.showToast(msg('toast.notice', loaded.notice));
     this.refresh();
   }
 
@@ -146,11 +147,11 @@ export class GameController {
     this.level = level;
     this.enterLevel(level);
     this.log.clear();
-    this.log.add(
+    this.log.addMessage(
       'info',
       level.kind === 'sandbox'
-        ? 'Open farm loaded. Crops you harvest here are kept.'
-        : `Mission loaded: ${level.mission.title}. Press Run when you're ready.`,
+        ? msg('log.openFarmLoaded', 'Open farm loaded. Crops you harvest here are kept.')
+        : msg('log.missionLoaded', "Mission loaded: {title}. Press Run when you're ready.", { title: level.mission.title }),
     );
     this.refresh();
   }
@@ -212,7 +213,12 @@ export class GameController {
     this.status = 'idle';
     this.errorLine = null;
     this.report = null;
-    this.log.add('info', this.level.kind === 'sandbox' ? 'Field cleared.' : 'Field reset to the mission start.');
+    this.log.addMessage(
+      'info',
+      this.level.kind === 'sandbox'
+        ? msg('log.fieldCleared', 'Field cleared.')
+        : msg('log.fieldReset', 'Field reset to the mission start.'),
+    );
     this.refresh();
   }
 
@@ -227,13 +233,13 @@ export class GameController {
     if (this.level.kind === 'sandbox') this.save = storeSandboxFarm(this.save, this.farm);
     const result = purchaseUpgrade(this.save, id);
     if (!result.ok) {
-      this.showToast(result.reason);
+      this.showToast(msg('toast.purchaseFailed', result.reason));
       this.refresh();
       return;
     }
     this.updateSave(result.save);
     this.deps.sound.play('buy');
-    this.showToast('Upgrade installed.');
+    this.showToast(msg('toast.upgradeInstalled', 'Upgrade installed.'));
     if (this.level.kind === 'sandbox') this.replaceFarm(this.buildFarm(this.level));
     this.refresh();
   }
@@ -257,7 +263,7 @@ export class GameController {
     this.level = resolveLevel('m1') as Level;
     this.enterLevel(this.level);
     this.log.clear();
-    this.showToast('Progress reset.');
+    this.showToast(msg('toast.progressReset', 'Progress reset.'));
     this.refresh();
   }
 
@@ -353,7 +359,7 @@ export class GameController {
       paused,
     );
     this.lastAutosave = this.now();
-    this.log.add('info', `Run started${paused ? ' in step mode' : ''}.`);
+    this.log.addMessage('info', paused ? msg('log.runStartedStep', 'Run started in step mode.') : msg('log.runStarted', 'Run started.'));
     this.syncStatus();
     return true;
   }
@@ -473,8 +479,8 @@ export class GameController {
     this.deps.repository.save(next);
   }
 
-  private showToast(text: string): void {
-    this.toast = { id: ++this.toastId, text };
+  private showToast(message: Message): void {
+    this.toast = { id: ++this.toastId, message };
   }
 
   private refresh(): void {
