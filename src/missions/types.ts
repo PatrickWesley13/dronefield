@@ -2,6 +2,7 @@ import type { Cost, CropId } from '@/domain/crops';
 import type { Farm } from '@/domain/farm';
 import type { Point } from '@/domain/geometry';
 import type { ProgramFeatures } from '@/interpreter';
+import type { Message } from '@/shared/message';
 
 export interface ObjectiveContext {
   readonly farm: Farm;
@@ -21,7 +22,7 @@ export interface Objective {
 export interface FailureRule {
   /** Shown alongside objectives, if the player should know about the rule up front. */
   readonly description?: string;
-  check(ctx: ObjectiveContext): string | null;
+  check(ctx: ObjectiveContext): Message | null;
 }
 
 export interface MissionMap {

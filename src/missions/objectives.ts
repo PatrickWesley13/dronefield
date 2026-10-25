@@ -1,4 +1,5 @@
 import { CROPS, type CropId } from '@/domain/crops';
+import type { Message } from '@/shared/message';
 import { parseMap } from './mapParser';
 import type { FailureRule, MissionMap, Objective } from './types';
 
@@ -52,11 +53,16 @@ export function replantedAsOriginal(map: MissionMap): Objective {
   };
 }
 
-export const failIfDestroyed = (message: string): FailureRule => ({
-  check: ({ farm }) => (farm.stats.destroyed > 0 ? message : null),
+/** Ends the run when a seedling is destroyed. `fallback` is the English text. */
+export const failIfDestroyed = (fallback: string): FailureRule => ({
+  check: ({ farm }) => (farm.stats.destroyed > 0 ? { key: 'failure.destroyed', fallback } : null),
 });
 
-export const tickLimit = (limit: number): FailureRule => ({
-  description: `Finish within ${limit.toLocaleString('en-US')} ticks`,
-  check: ({ farm }) => (farm.tick > limit ? `Out of time: the mission allows ${limit.toLocaleString('en-US')} ticks.` : null),
-});
+export const tickLimit = (limit: number): FailureRule => {
+  const fallback = `Out of time: the mission allows ${limit.toLocaleString('en-US')} ticks.`;
+  const message: Message = { key: 'failure.outOfTime', params: { limit: limit.toLocaleString('en-US') }, fallback };
+  return {
+    description: `Finish within ${limit.toLocaleString('en-US')} ticks`,
+    check: ({ farm }) => (farm.tick > limit ? message : null),
+  };
+};

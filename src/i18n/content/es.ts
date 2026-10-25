@@ -83,6 +83,13 @@ export const es: Record<ContentKey, string> = {
 
   'failure.destroyed': 'Se destruyó una plántula. Cosecha solo cuando getCropGrowth() === 1.',
   'failure.outOfTime': 'Se acabó el tiempo: la misión permite {limit} ticks.',
+  'report.missionFailed': 'Misión fallida',
+  'report.notDone': 'Casi',
+  'report.missionComplete': 'Misión completada',
+  'report.everyMissionComplete': 'Todas las misiones completadas',
+  'report.stillToDo': 'Tu programa terminó antes de cumplir todos los objetivos. Pendiente: {items}.',
+  'report.newBest': 'Nuevo récord: {ticks} ticks (antes era {previous}).',
+  'report.bestSoFar': 'Mejor hasta ahora: {ticks} ticks.',
 
   'crop.wheat.one': 'trigo',
   'crop.wheat.other': 'trigo',

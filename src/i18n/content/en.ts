@@ -83,6 +83,13 @@ export const en = {
 
   'failure.destroyed': 'A seedling was destroyed. Only harvest when getCropGrowth() === 1.',
   'failure.outOfTime': 'Out of time: the mission allows {limit} ticks.',
+  'report.missionFailed': 'Mission failed',
+  'report.notDone': 'Not quite',
+  'report.missionComplete': 'Mission complete',
+  'report.everyMissionComplete': 'Every mission complete',
+  'report.stillToDo': 'Your program ended before every objective was met. Still to do: {items}.',
+  'report.newBest': 'New best: {ticks} ticks (was {previous}).',
+  'report.bestSoFar': 'Best so far: {ticks} ticks.',
 
   'crop.wheat.one': 'wheat',
   'crop.wheat.other': 'wheat',

@@ -55,7 +55,7 @@ describe('missions', () => {
     const m = findMission('m5')!;
     const r = run('for (let i = 0; i < 8; i++) { harvest(); move("east"); }', createMissionFarm(m), { mission: m });
     expect(r.outcome.kind).toBe('failed');
-    expect(r.outcome.kind === 'failed' && r.outcome.reason).toMatch(/seedling/);
+    expect(r.outcome.kind === 'failed' && r.outcome.reason.fallback).toMatch(/seedling/);
   });
   it('stops the stuck m6 starter with a debugging message', () => {
     const m = findMission('m6')!;
@@ -65,7 +65,7 @@ describe('missions', () => {
   it('fails slow programs on the m10 tick limit', () => {
     const m = findMission('m10')!;
     const r = run('while (true) wait(100);', createMissionFarm(m), { mission: m });
-    expect(r.outcome.kind === 'failed' && r.outcome.reason).toMatch(/Out of time/);
+    expect(r.outcome.kind === 'failed' && r.outcome.reason.fallback).toMatch(/Out of time/);
   });
   it('reports a finished-but-incomplete program as finished', () => {
     const m = findMission('m1')!;
