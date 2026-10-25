@@ -2,6 +2,7 @@ import { CROP_IDS } from '@/domain/crops';
 import { MISSIONS, missionIndex } from '@/missions';
 import type { RunStatus } from '@/app/gameController';
 import { useT } from '@/i18n/context';
+import { missionText } from '@/i18n/messages';
 import type { MessageKey } from '@/i18n/en';
 import { useController, useGame } from '../GameContext';
 import { CropChip } from './CropIcon';
@@ -20,7 +21,7 @@ const STATUS_KEY: Readonly<Record<RunStatus, MessageKey>> = {
 export function TopBar({ onOpenSettings, onOpenTour }: { onOpenSettings: () => void; onOpenTour: () => void }) {
   const game = useGame();
   const controller = useController();
-  const { t } = useT();
+  const { t, locale } = useT();
   const { level, save, hud } = game;
   const bank = level.kind === 'sandbox' ? hud.inventory : save.bank;
   const crops = CROP_IDS.filter((id) => save.unlockedCrops.includes(id) || bank[id] > 0);
@@ -47,7 +48,8 @@ export function TopBar({ onOpenSettings, onOpenTour }: { onOpenSettings: () => v
           </>
         ) : (
           <>
-            {level.mission.title} <span>{t('top.missionOf', { index: missionIndex(level.id) + 1, total: MISSIONS.length })}</span>
+            {missionText(locale, level.mission.id, 'title', level.mission.title)}{' '}
+            <span>{t('top.missionOf', { index: missionIndex(level.id) + 1, total: MISSIONS.length })}</span>
           </>
         )}
       </div>
