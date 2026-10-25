@@ -4,26 +4,41 @@ import type { FailureRule, MissionMap, Objective } from './types';
 
 const plural = (n: number, id: CropId): string => `${n} ${n === 1 ? CROPS[id].label.toLowerCase() : CROPS[id].plural}`;
 
-export const reachBeacon = (description = 'Reach the beacon'): Objective => ({
+export const reachBeacon = (description = 'Reach the beacon', key = 'objective.beacon'): Objective => ({
   description,
+  key,
   isMet: ({ farm }) => farm.isAtBeacon(),
 });
 
 export const haveAtLeast = (crop: CropId, amount: number, verb: 'Have' | 'Collect' = 'Have'): Objective => ({
   description: `${verb} ${plural(amount, crop)}`,
+  key: verb === 'Collect' ? 'objective.collect' : 'objective.have',
+  params: { count: amount, crop: CROPS[crop].plural },
   isMet: ({ farm }) => farm.inventory.get(crop) >= amount,
 });
 
 export const harvestAtLeast = (count: number, description = `Harvest ${count} crops`): Objective => ({
   description,
+  key: 'objective.harvest',
+  params: { count },
   isMet: ({ farm }) => farm.stats.harvests >= count,
 });
 
-export const usesLoop = (): Objective => ({ description: 'Use a loop', isMet: ({ features }) => features.usesLoop });
-export const usesFunction = (): Objective => ({ description: 'Define and use a function', isMet: ({ features }) => features.usesFunction });
+export const usesLoop = (): Objective => ({
+  description: 'Use a loop',
+  key: 'objective.loop',
+  isMet: ({ features }) => features.usesLoop,
+});
+
+export const usesFunction = (): Objective => ({
+  description: 'Define and use a function',
+  key: 'objective.function',
+  isMet: ({ features }) => features.usesFunction,
+});
 
 export const nothingDestroyed = (description = 'Leave every seedling standing'): Objective => ({
   description,
+  key: 'objective.nothingDestroyed',
   isMet: ({ farm }) => farm.stats.destroyed === 0,
 });
 
@@ -32,6 +47,7 @@ export function replantedAsOriginal(map: MissionMap): Objective {
   const original = parseMap(map).crops;
   return {
     description: 'Replant every tile with its original crop',
+    key: 'objective.replanted',
     isMet: ({ farm }) => original.every((c) => farm.tileAt(c)?.crop?.type === c.type),
   };
 }

@@ -9,7 +9,11 @@ export interface ObjectiveContext {
 }
 
 export interface Objective {
+  /** English text. The fallback when the objective has no translation key. */
   readonly description: string;
+  /** Catalog key and parameters, so the mission list can be translated. */
+  readonly key?: string;
+  readonly params?: Readonly<Record<string, string | number>>;
   isMet(ctx: ObjectiveContext): boolean;
 }
 

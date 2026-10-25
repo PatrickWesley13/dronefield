@@ -2,6 +2,7 @@ import { CROPS, costEntries } from '@/domain/crops';
 import { sandboxLoadout } from '@/progression';
 import { useT } from '@/i18n/context';
 import type { MessageKey } from '@/i18n/en';
+import { briefingText, missionText, translateKey } from '@/i18n/messages';
 import { formatCount } from '../../format';
 import { useGame } from '../../GameContext';
 import { CostChips, CropIcon } from '../CropIcon';
@@ -13,7 +14,7 @@ const METRIC_KEYS = {
 } as const satisfies Record<string, MessageKey>;
 
 export function MissionTab({ onShowReference }: { onShowReference: () => void }) {
-  const { t } = useT();
+  const { t, locale } = useT();
   const game = useGame();
   const { level, save, missionStatus, lastRun } = game;
 
@@ -54,10 +55,10 @@ export function MissionTab({ onShowReference }: { onShowReference: () => void })
   const met = missionStatus?.objectivesMet ?? m.objectives.map(() => false);
   return (
     <>
-      <h2>{m.title}</h2>
-      <p className="concept">{m.concept}</p>
-      {m.briefing.map((text) => (
-        <p key={text}>{text}</p>
+      <h2>{missionText(locale, m.id, 'title', m.title)}</h2>
+      <p className="concept">{missionText(locale, m.id, 'concept', m.concept)}</p>
+      {m.briefing.map((text, i) => (
+        <p key={text}>{briefingText(locale, m.id, i, text)}</p>
       ))}
       <h3>{t('mission.objectives')}</h3>
       <ul className="objectives">
@@ -65,7 +66,7 @@ export function MissionTab({ onShowReference }: { onShowReference: () => void })
           <li key={o.description} className={met[i] ? 'is-met' : ''}>
             <span className="objectives__box" aria-hidden="true" />
             <span>
-              {o.description}
+              {o.key ? translateKey(locale, o.key, o.params, o.description) : o.description}
               <span className="sr-only">{met[i] ? t('mission.objectiveDone') : ''}</span>
             </span>
           </li>
